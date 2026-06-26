@@ -44,6 +44,22 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
     digitalChannels: '2',
   });
 
+  const [tjslClaim, setTjslClaim] = useState({
+    isBinaan: 'Belum' as 'Ya' | 'Pernah' | 'Belum' | 'Tidak Tahu',
+    programAsal: 'Program PUMK Pertamina',
+    programAsalLainnya: '',
+    subholding: '',
+    rumahBumn: '',
+    region: '',
+    tahun: '',
+    mitraId: '',
+    picName: '',
+    statusProgram: 'Aktif',
+    evidenceFile: '',
+    notes: '',
+    consentTJSL: false
+  });
+
   const [commitmentChecked, setCommitmentChecked] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -81,16 +97,29 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
       setValidationError('');
       setOnboardingStep(3);
     } else if (onboardingStep === 3) {
+      if (tjslClaim.isBinaan === 'Ya' || tjslClaim.isBinaan === 'Pernah') {
+        if (!tjslClaim.programAsal || !tjslClaim.tahun || !tjslClaim.evidenceFile) {
+          setValidationError('Silakan isi program asal, tahun, dan sebutkan nama file bukti pendukung.');
+          return;
+        }
+        if (!tjslClaim.consentTJSL) {
+          setValidationError('Anda harus memberikan persetujuan kebenaran data riwayat pembinaan.');
+          return;
+        }
+      }
       setValidationError('');
       setOnboardingStep(4);
     } else if (onboardingStep === 4) {
+      setValidationError('');
+      setOnboardingStep(5);
+    } else if (onboardingStep === 5) {
       if (!initialConditions.revenue || !initialConditions.employees) {
         setValidationError('Silakan isi data kondisi awal usaha.');
         return;
       }
       setValidationError('');
-      setOnboardingStep(5);
-    } else if (onboardingStep === 5) {
+      setOnboardingStep(6);
+    } else if (onboardingStep === 6) {
       if (!commitmentChecked) {
         setValidationError('Anda harus menyetujui lembar komitmen program.');
         return;
@@ -109,6 +138,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
   const stepIcons = [
     { label: 'Profil Pemilik', icon: User },
     { label: 'Profil Usaha', icon: Briefcase },
+    { label: 'Afiliasi & TJSL', icon: Sparkles },
     { label: 'Legalitas', icon: FileText },
     { label: 'Kondisi Awal', icon: BarChart3 },
     { label: 'Komitmen', icon: CheckSquare },
@@ -288,7 +318,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h2 className="text-lg font-bold">Aktivasi Profil & Onboarding</h2>
-                    <p className="text-xs text-white/70">Langkah {onboardingStep} dari 5: Lengkapi profil baseline Anda</p>
+                    <p className="text-xs text-white/70">Langkah {onboardingStep} dari 6: Lengkapi profil baseline Anda</p>
                   </div>
                   <button
                     onClick={() => setIsOnboarding(false)}
@@ -299,7 +329,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                 </div>
 
                 {/* Progress Indicators */}
-                <div className="grid grid-cols-5 gap-2 relative z-10">
+                <div className="grid gap-2 relative z-10" style={{ gridTemplateColumns: `repeat(${stepIcons.length}, minmax(0, 1fr))` }}>
                   {stepIcons.map((step, idx) => {
                     const stepNum = idx + 1;
                     const isActive = onboardingStep >= stepNum;
@@ -452,8 +482,211 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                   </div>
                 )}
 
-                {/* STEP 3: LEGALITAS */}
+                {/* STEP 3: AFILIASI & TJSL PERTAMINA */}
                 {onboardingStep === 3 && (
+                  <div className="space-y-4 font-sans text-xs">
+                    <h3 className="text-base font-bold text-[#16365C] pb-2 border-b flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-[#A8C61F]" />
+                      <span>Afiliasi dan Riwayat Pembinaan Pertamina</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Informasi ini digunakan untuk memvalidasi status kepesertaan Anda di program TJSL Pertamina Grup guna sinkronisasi data program Satu Data SMEPP.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                          Apakah usaha Anda merupakan atau pernah menjadi binaan program TJSL Pertamina Grup? *
+                        </label>
+                        <select
+                          value={tjslClaim.isBinaan}
+                          onChange={(e) => setTjslClaim({ ...tjslClaim, isBinaan: e.target.value as any })}
+                          className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:ring-2 focus:ring-[#0072BC]"
+                        >
+                          <option value="Ya">Ya, saat ini merupakan binaan TJSL Pertamina</option>
+                          <option value="Pernah">Pernah menjadi binaan TJSL Pertamina</option>
+                          <option value="Belum">Belum pernah menjadi binaan TJSL Pertamina</option>
+                          <option value="Tidak Tahu">Tidak mengetahui status binaan</option>
+                        </select>
+                      </div>
+
+                      {(tjslClaim.isBinaan === 'Ya' || tjslClaim.isBinaan === 'Pernah') && (
+                        <div className="p-4 bg-blue-50/40 border border-blue-100 rounded-xl space-y-4">
+                          <span className="font-bold text-[#16365C] block text-xs border-b pb-1">
+                            Lengkapi Detail Riwayat Pembinaan:
+                          </span>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Asal Program Pembinaan *</label>
+                              <select
+                                value={tjslClaim.programAsal}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, programAsal: e.target.value })}
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                              >
+                                <option value="Program PUMK Pertamina">Program PUMK Pertamina</option>
+                                <option value="Rumah BUMN Pertamina">Rumah BUMN Pertamina</option>
+                                <option value="Program CSR / TJSL Subholding">Program CSR / TJSL Subholding</option>
+                                <option value="PFpreneur">PFpreneur</option>
+                                <option value="Pertamina UMK Academy tahun sebelumnya">Pertamina UMK Academy tahun sebelumnya</option>
+                                <option value="Pertapreneur Aggregator">Pertapreneur Aggregator</option>
+                                <option value="SMEXPO">SMEXPO</option>
+                                <option value="Program Pertamina lainnya">Program Pertamina lainnya</option>
+                              </select>
+                            </div>
+
+                            {tjslClaim.programAsal === 'Program Pertamina lainnya' && (
+                              <div>
+                                <label className="block text-[11px] font-bold text-gray-700 mb-1">Nama Program Lainnya *</label>
+                                <input
+                                  type="text"
+                                  value={tjslClaim.programAsalLainnya}
+                                  onChange={(e) => setTjslClaim({ ...tjslClaim, programAsalLainnya: e.target.value })}
+                                  placeholder="Sebutkan nama program..."
+                                  className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                                />
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Entitas atau Subholding Pertamina</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.subholding}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, subholding: e.target.value })}
+                                placeholder="Contoh: PHE, Patra Niaga, Kilang Pertamina"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Rumah BUMN (Jika Relevan)</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.rumahBumn}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, rumahBumn: e.target.value })}
+                                placeholder="Contoh: Rumah BUMN Bandung"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Region Pembinaan</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.region}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, region: e.target.value })}
+                                placeholder="Contoh: Jawa Tengah, Sulawesi"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Tahun Mengikuti Program *</label>
+                              <input
+                                type="number"
+                                value={tjslClaim.tahun}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, tahun: e.target.value })}
+                                placeholder="Contoh: 2024"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 font-mono"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Nomor Mitra Binaan / ID Peserta</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.mitraId}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, mitraId: e.target.value })}
+                                placeholder="ID pendaftaran program"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 font-mono"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Nama PIC / Pendamping</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.picName}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, picName: e.target.value })}
+                                placeholder="Nama fasilitator pendamping"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Status Program *</label>
+                              <div className="flex gap-4 mt-2">
+                                <label className="flex items-center space-x-1.5 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="statusProgramOnboarding"
+                                    checked={tjslClaim.statusProgram === 'Aktif'}
+                                    onChange={() => setTjslClaim({ ...tjslClaim, statusProgram: 'Aktif' })}
+                                    className="text-[#0072BC] focus:ring-[#0072BC]"
+                                  />
+                                  <span>Aktif</span>
+                                </label>
+                                <label className="flex items-center space-x-1.5 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="statusProgramOnboarding"
+                                    checked={tjslClaim.statusProgram === 'Alumni'}
+                                    onChange={() => setTjslClaim({ ...tjslClaim, statusProgram: 'Alumni' })}
+                                    className="text-[#0072BC] focus:ring-[#0072BC]"
+                                  />
+                                  <span>Alumni</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Upload Bukti Pembinaan *</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.evidenceFile}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, evidenceFile: e.target.value })}
+                                placeholder="Contoh: sertifikat_program.pdf"
+                                className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 font-mono"
+                              />
+                              <span className="text-[9px] text-gray-400 block mt-1">
+                                Tulis nama berkas bukti: Sertifikat program, surat keterangan pembinaan, dsb.
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-700 mb-1">Catatan Tambahan</label>
+                            <textarea
+                              rows={2}
+                              value={tjslClaim.notes}
+                              onChange={(e) => setTjslClaim({ ...tjslClaim, notes: e.target.value })}
+                              placeholder="Tuliskan keterangan tambahan bila ada..."
+                              className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                            />
+                          </div>
+
+                          <div className="pt-2">
+                            <label className="flex items-start space-x-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={tjslClaim.consentTJSL}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, consentTJSL: e.target.checked })}
+                                className="mt-0.5 rounded text-[#0072BC] focus:ring-[#0072BC]"
+                              />
+                              <span className="text-[10px] text-gray-600 leading-normal">
+                                Saya menyatakan bahwa informasi riwayat pembinaan yang saya sampaikan adalah benar dan dapat diverifikasi oleh Tim SMEPP Pertamina. *
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4: LEGALITAS */}
+                {onboardingStep === 4 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Legalitas & Sertifikasi (Opsional - Bisa Diisi Nanti)</h3>
                     <p className="text-xs text-gray-500 mb-4">
@@ -491,8 +724,8 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                   </div>
                 )}
 
-                {/* STEP 4: KONDISI AWAL (BASELINE IMPACT MEASUREMENT) */}
-                {onboardingStep === 4 && (
+                {/* STEP 5: KONDISI AWAL (BASELINE IMPACT MEASUREMENT) */}
+                {onboardingStep === 5 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Kondisi Awal Usaha (Baseline SROI)</h3>
                     <p className="text-xs text-gray-500 mb-4">
@@ -531,8 +764,8 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                   </div>
                 )}
 
-                {/* STEP 5: KOMITMEN */}
-                {onboardingStep === 5 && (
+                {/* STEP 6: KOMITMEN */}
+                {onboardingStep === 6 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Pernyataan Komitmen & Integritas</h3>
                     <div className="p-4 bg-gray-50 border rounded-xl text-xs space-y-3 max-h-60 overflow-y-auto leading-relaxed text-gray-600">
@@ -577,7 +810,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                     onClick={handleNextStep}
                     className="bg-[#0072BC] hover:bg-[#0072BC]/90 text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow transition-all flex items-center space-x-1.5"
                   >
-                    <span>{onboardingStep === 5 ? 'Selesaikan & Masuk' : 'Lanjut'}</span>
+                    <span>{onboardingStep === 6 ? 'Selesaikan & Masuk' : 'Lanjut'}</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>

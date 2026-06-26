@@ -145,7 +145,7 @@ export interface Participant {
   businessName: string;
   sector: string;
   region: string;
-  stage: 'Pendaftaran' | 'Verifikasi' | 'Pembinaan Regional' | 'Kurasi Nasional' | 'Pembinaan Nasional' | 'Top 100 Champion' | 'Graduation' | 'Nasional' | string;
+  stage: 'Pendaftaran' | 'Verifikasi Status Binaan TJSL' | 'Pembinaan Regional' | 'Kurasi Nasional' | 'Pembinaan Nasional' | 'Top 100 Champion' | 'Graduation' | 'Nasional' | string;
   status: 'Aktif' | 'Pasif' | 'Selesai';
   riskStatus: 'Aman' | 'Perlu Perhatian' | 'Berisiko' | 'Tidak Aktif';
   lastLogin: string;
@@ -162,6 +162,37 @@ export interface Participant {
   isRecommendedAggregator?: boolean;
   isUMKMTroopers?: boolean;
   isExportReady?: boolean;
+  tjslStatus?: 'Binaan Terverifikasi' | 'Perlu Klarifikasi' | 'Perlu Persetujuan SMEPP' | 'Tidak Eligible' | 'Belum Diperiksa';
+  tjslVerificationStatus?: 'Terverifikasi' | 'Menunggu Klarifikasi' | 'Menunggu Persetujuan' | 'Tidak Terverifikasi' | 'Draft' | 'Perlu Klarifikasi' | 'Menunggu Verifikasi' | 'Tidak Eligible';
+  tjslClaim?: TJSLClaim;
+  tjslLogs?: TJSLAuditLog[];
+}
+
+export interface TJSLClaim {
+  isBinaan: 'Ya' | 'Pernah' | 'Belum' | 'Tidak Tahu';
+  programAsal?: string;
+  programAsalLainnya?: string;
+  subholding?: string;
+  rumahBumn?: string;
+  region?: string;
+  tahun?: number | string;
+  mitraId?: string;
+  picName?: string;
+  statusProgram?: 'Aktif' | 'Alumni' | string;
+  evidenceFile?: string;
+  notes?: string;
+  consent?: boolean;
+  dbMatchDetails?: string;
+  dbMatchStatus?: 'Match' | 'Partial' | 'No History' | 'Inconsistent';
+}
+
+export interface TJSLAuditLog {
+  id?: string;
+  date: string;
+  action: string;
+  pic?: string;
+  notes: string;
+  actor?: string;
 }
 
 export interface ForumPost {

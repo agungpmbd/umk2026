@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Participant, Challenge, ActionPlan } from '../types';
-import { Users, AlertTriangle, ShieldCheck, CheckCircle2, ChevronRight, Search, Filter, MessageSquare, BookOpen, TrendingUp, HelpCircle, Star, Sparkles } from 'lucide-react';
+import { 
+  Users, AlertTriangle, ShieldCheck, CheckCircle2, ChevronRight, Search, Filter, 
+  MessageSquare, BookOpen, TrendingUp, HelpCircle, Star, Sparkles, Clock, AlertCircle, FileText, ShieldAlert
+} from 'lucide-react';
 
 interface FacilitatorDashboardProps {
   participants: Participant[];
@@ -398,6 +401,178 @@ export default function FacilitatorDashboard({ participants, onUpdateParticipant
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+
+            {/* VERIFIKASI STATUS BINAAN TJSL PERTAMINA (STRICT REQUIREMENT) */}
+            <div className="space-y-4 text-xs">
+              <h4 className="font-bold text-gray-800 border-b pb-1 flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-[#0072BC]" />
+                <span>Status Kemitraan TJSL Pertamina</span>
+              </h4>
+
+              {selectedParticipant.tjslVerificationStatus ? (() => {
+                const claimStatus = selectedParticipant.tjslVerificationStatus;
+                const claim = selectedParticipant.tjslClaim;
+
+                // Hardcoded DB Matching Helper (synchronized with Admin view)
+                const getDbMatch = (pId: string) => {
+                  if (pId === 'P001') {
+                    return {
+                      found: true,
+                      mitraId: 'PUMK-2024-88392',
+                      name: 'Siti Rahmawati',
+                      programAsal: 'Program PUMK Pertamina',
+                      subholding: 'PT Pertamina Patra Niaga',
+                      region: 'Jawa Tengah',
+                      tahun: 2024,
+                      statusProgram: 'Aktif',
+                      mismatchFields: [] as string[]
+                    };
+                  }
+                  if (pId === 'P006') {
+                    return {
+                      found: true,
+                      mitraId: 'PUMK-2024-91823',
+                      name: 'Ahmad Hidayat',
+                      programAsal: 'Program PUMK Pertamina',
+                      subholding: 'PHE (Pertamina Hulu Energi)',
+                      region: 'Jawa Barat',
+                      tahun: 2024,
+                      statusProgram: 'Aktif',
+                      mismatchFields: [] as string[]
+                    };
+                  }
+                  if (pId === 'P007') {
+                    return {
+                      found: true,
+                      mitraId: 'RB-2023-44122',
+                      name: 'Maria Lestari',
+                      programAsal: 'Rumah BUMN Pertamina',
+                      subholding: 'PT Pertamina Patra Niaga',
+                      region: 'Yogyakarta',
+                      tahun: 2023,
+                      statusProgram: 'Alumni',
+                      mismatchFields: ['tahun', 'subholding']
+                    };
+                  }
+                  return {
+                    found: false,
+                    reason: 'NIK atau Nama tidak terdaftar di database SMEPP.'
+                  };
+                };
+
+                const dbMatch = getDbMatch(selectedParticipant.id);
+                const badgeStyle = 
+                  claimStatus === 'Terverifikasi' ? 'bg-green-100 text-green-800' :
+                  claimStatus === 'Perlu Klarifikasi' ? 'bg-orange-100 text-orange-800' :
+                  claimStatus === 'Menunggu Verifikasi' ? 'bg-blue-100 text-[#0072BC]' :
+                  'bg-red-100 text-red-800';
+
+                return (
+                  <div className="space-y-3.5">
+                    {/* Status badge */}
+                    <div className="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border">
+                      <span className="font-bold text-gray-500">Status Verifikasi:</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${badgeStyle}`}>
+                        {claimStatus}
+                      </span>
+                    </div>
+
+                    {/* Side-by-side comparison tables */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pembandingan Data Lapangan</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* Claimed */}
+                        <div className="p-2.5 bg-gray-50 border rounded-xl space-y-1.5 text-[11px]">
+                          <span className="font-extrabold text-[9px] text-[#0072BC] block border-b pb-0.5">KLAIM MANDIRI</span>
+                          <div>
+                            <span className="text-[8px] text-gray-400 block font-semibold">Program Asal</span>
+                            <span className="font-bold text-gray-700">{claim?.programAsal}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-gray-400 block font-semibold">Subholding</span>
+                            <span className="font-bold text-gray-700">{claim?.subholding}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-gray-400 block font-semibold">Mitra ID</span>
+                            <span className="font-bold text-gray-700 font-mono">{claim?.mitraId}</span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-gray-400 block font-semibold">Bukti Pendukung</span>
+                            <span className="font-bold text-[#ED1B2F] flex items-center gap-0.5 cursor-pointer text-[10px]">
+                              <FileText className="h-3 w-3 inline" />
+                              <span>{claim?.evidenceFile || 'Tidak ada'}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Database record */}
+                        <div className="p-2.5 bg-blue-50/20 border border-blue-100 rounded-xl space-y-1.5 text-[11px]">
+                          <span className="font-extrabold text-[9px] text-green-700 block border-b pb-0.5">DATABASE SMEPP</span>
+                          {dbMatch.found ? (
+                            <>
+                              <div>
+                                <span className="text-[8px] text-gray-400 block font-semibold">Program Asal</span>
+                                <span className="font-bold text-green-800">{dbMatch.programAsal}</span>
+                              </div>
+                              <div>
+                                <span className="text-[8px] text-gray-400 block font-semibold">Subholding</span>
+                                <span className="font-bold text-green-800">{dbMatch.subholding}</span>
+                              </div>
+                              <div>
+                                <span className="text-[8px] text-gray-400 block font-semibold">Mitra ID</span>
+                                <span className="font-bold text-green-800 font-mono">{dbMatch.mitraId}</span>
+                              </div>
+                              <div>
+                                <span className="text-[8px] text-gray-400 block font-semibold">Status Pembinaan</span>
+                                <span className="font-extrabold text-green-800 text-[9px]">{dbMatch.statusProgram}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center py-4 text-gray-400">
+                              <ShieldAlert className="h-5 w-5 text-red-400 mb-1" />
+                              <span className="text-[9px] font-bold leading-tight">Tidak Terdaftar</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Historical Audit Logs */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Riwayat Log Audit Verifikasi</p>
+                      <div className="border rounded-xl p-3 bg-gray-50/50 max-h-[160px] overflow-y-auto space-y-3 relative border-l-2 border-l-[#0072BC]">
+                        {selectedParticipant.tjslLogs && selectedParticipant.tjslLogs.length > 0 ? (
+                          selectedParticipant.tjslLogs.map((log, index) => (
+                            <div key={index} className="text-[11px] leading-relaxed border-b pb-1.5 last:border-0 last:pb-0">
+                              <div className="flex justify-between text-[9px] text-gray-400 font-medium">
+                                <span>{log.date}</span>
+                                <span className="font-semibold text-gray-500">Oleh: {log.pic || log.actor}</span>
+                              </div>
+                              <div className="font-extrabold text-gray-800 mt-0.5">{log.action}</div>
+                              <p className="text-[10px] text-gray-500 mt-0.5 italic">"{log.notes}"</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-400 italic text-center py-2">Belum ada riwayat audit log.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Supervisor constraints warning */}
+                    <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-1.5 text-[10px] font-medium border border-blue-100">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-[#0072BC]" />
+                      <span>Fasilitator memegang peran supervisor (Hanya dapat memantau). Penentu kelayakan status mutlak oleh Admin SMEPP Pusat.</span>
+                    </div>
+
+                  </div>
+                );
+              })() : (
+                <div className="p-3 bg-gray-50 border rounded-xl text-center text-gray-400 italic">
+                  Peserta terdaftar lewat Kategori Jalur Umum (Bukan Mitra Binaan TJSL).
+                </div>
               )}
             </div>
 

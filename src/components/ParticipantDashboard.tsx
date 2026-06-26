@@ -3,7 +3,7 @@ import { Participant, LearningModule, Challenge, AgendaEvent } from '../types';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import {
   Sparkles, Award, BookOpen, Clock, Calendar, CheckCircle2, TrendingUp,
-  ChevronRight, Users, MessageSquare, ShieldAlert, ArrowUpRight
+  ChevronRight, Users, MessageSquare, ShieldAlert, ArrowUpRight, ShieldCheck
 } from 'lucide-react';
 
 interface ParticipantDashboardProps {
@@ -34,15 +34,69 @@ export default function ParticipantDashboard({
   onMarkModuleComplete
 }: ParticipantDashboardProps) {
 
-  // Journey steps mapping
-  const journeySteps = [
-    { label: 'Pendaftaran', desc: 'Lolos' },
-    { label: 'Verifikasi', desc: 'Lolos' },
-    { label: 'Pembinaan Regional', desc: 'Sedang Berjalan', active: true },
-    { label: 'Kurasi Nasional', desc: 'Juli 2026' },
-    { label: 'Pembinaan Nasional', desc: 'Agustus 2026' },
-    { label: 'Graduation', desc: 'September 2026' }
+  // Journey stages mapping (6 high-level stages as requested)
+  const journeyStages = [
+    { 
+      id: 'pendaftaran_verifikasi',
+      label: 'Pendaftaran & Verifikasi', 
+      desc: 'Identitas, status binaan, dan administrasi' 
+    },
+    { 
+      id: 'pembinaan_regional',
+      label: 'Pembinaan Regional', 
+      desc: 'Materi & mentoring regional' 
+    },
+    { 
+      id: 'kurasi_nasional',
+      label: 'Kurasi Nasional', 
+      desc: 'Penilaian & kurasi nasional' 
+    },
+    { 
+      id: 'pembinaan_nasional',
+      label: 'Pembinaan Nasional', 
+      desc: 'Mentoring intensif nasional' 
+    },
+    { 
+      id: 'seleksi_akhir',
+      label: 'Seleksi Akhir', 
+      desc: 'Top 100 Champion & Calon PAG' 
+    },
+    { 
+      id: 'inaugurasi_champions',
+      label: 'Inaugurasi & Champions', 
+      desc: 'Apresiasi & kelulusan' 
+    }
   ];
+
+  const getActiveStageIndex = (stageName: string) => {
+    const s = stageName ? stageName.toLowerCase() : '';
+    if (s.includes('pendaftaran') || s.includes('identitas') || s.includes('administrasi') || s.includes('tjsl')) {
+      return 0;
+    }
+    if (s.includes('regional')) {
+      return 1;
+    }
+    if (s.includes('kurasi nasional')) {
+      return 2;
+    }
+    if (s.includes('pembinaan nasional') || s.includes('nasional')) {
+      return 3;
+    }
+    if (s.includes('top 100') || s.includes('seleksi akhir') || s.includes('pag')) {
+      return 4;
+    }
+    if (s.includes('graduation') || s.includes('champions') || s.includes('inaugurasi')) {
+      return 5;
+    }
+    return 1; // Default to Pembinaan Regional
+  };
+
+  const activeIdx = getActiveStageIndex(participant.stage);
+
+  // Default selected stage is the participant's current stage
+  const [selectedStageId, setSelectedStageId] = React.useState<string>(
+    journeyStages[activeIdx]?.id || 'pembinaan_regional'
+  );
 
   // Formatting utility
   const formatRupiah = (num: number) => {
@@ -86,46 +140,505 @@ export default function ParticipantDashboard({
         </div>
       </div>
 
-      {/* B. HORIZONTAL JOURNEY TRACKER */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Journey Tahapan Program UMK Academy 2026</h3>
-        
-        {/* Responsive Steps */}
-        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-2">
-          {/* Background progress line on desktop */}
-          <div className="hidden md:block absolute top-[18px] left-[5%] right-[5%] h-[4px] bg-gray-100 -z-0"></div>
-          <div className="hidden md:block absolute top-[18px] left-[5%] w-[40%] h-[4px] bg-[#A8C61F] -z-0"></div>
+      {/* TJSL VERIFICATION ACTION CARD */}
+      {participant.tjslVerificationStatus && (
+        <div className="p-4 bg-gradient-to-r from-[#0072BC]/5 to-[#A8C61F]/5 border border-[#0072BC]/20 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2.5 rounded-xl bg-white shadow-sm shrink-0 ${
+              participant.tjslVerificationStatus === 'Terverifikasi' ? 'text-green-600' :
+              participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'text-orange-500' :
+              'text-[#0072BC]'
+            }`}>
+              {participant.tjslVerificationStatus === 'Terverifikasi' ? (
+                <ShieldCheck className="h-5 w-5" />
+              ) : (
+                <ShieldAlert className="h-5 w-5 animate-pulse" />
+              )}
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Status Verifikasi Binaan TJSL Pertamina</p>
+              <h4 className="text-sm font-extrabold text-[#16365C] mt-0.5">
+                {participant.tjslVerificationStatus === 'Terverifikasi' ? 'Selamat! Status Binaan Anda Terverifikasi' :
+                 participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'Klarifikasi Diperlukan untuk Kelayakan Binaan' :
+                 participant.tjslVerificationStatus === 'Menunggu Verifikasi' ? 'Klarifikasi / Klaim Sedang Ditinjau' :
+                 'Status: ' + participant.tjslVerificationStatus}
+              </h4>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {participant.tjslVerificationStatus === 'Terverifikasi' ? 'Klaim Anda terbukti sah dalam database Satu Data SMEPP.' :
+                 participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'Ditemukan perbedaan data. Mohon lengkapi tanggapan dan upload berkas bukti segera.' :
+                 'Dokumen Anda sedang berada di antrean pemeriksaan manual.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onTabChange('tjsl_verification')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition shrink-0 w-full md:w-auto text-center ${
+              participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'bg-[#ED1B2F] hover:bg-[#ED1B2F]/90 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-[#16365C]'
+            }`}
+          >
+            {participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'Kirim Klarifikasi Sekarang' : 'Lihat Detail Status'}
+          </button>
+        </div>
+      )}
 
-          {journeySteps.map((step, idx) => {
-            const isCompleted = idx < 2;
-            const isCurrent = idx === 2;
-            const isFuture = idx > 2;
+      {/* B. SIMPLIFIED JOURNEY TRACKER */}
+      <div id="simplified-journey-tracker" className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-[#16365C]">Journey Tahapan Program UMK Academy 2026</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Klik pada tiap tahap di bawah untuk melihat rincian progres dan prasyarat</p>
+          </div>
+          <span className="text-[11px] font-bold text-[#0072BC] bg-blue-50 px-3 py-1 rounded-full border border-blue-100/50 w-fit">
+            Tahap Saat Ini: {journeyStages[activeIdx]?.label || 'Pembinaan Regional'}
+          </span>
+        </div>
+
+        {/* DESKTOP TIMELINE ROW */}
+        <div className="hidden md:block">
+          <div className="relative flex flex-row justify-between items-start gap-4 py-4 px-2">
+            {/* Background progress line */}
+            <div className="absolute top-[28px] left-[6%] right-[6%] h-[3px] bg-gray-100 -z-0"></div>
+            <div 
+              className="absolute top-[28px] left-[6%] h-[3px] bg-[#A8C61F] transition-all duration-500 -z-0"
+              style={{ width: `${(activeIdx / (journeyStages.length - 1)) * 88}%` }}
+            ></div>
+
+            {journeyStages.map((stage, idx) => {
+              const isCompleted = idx < activeIdx;
+              const isCurrent = idx === activeIdx;
+              const isFuture = idx > activeIdx;
+              const isSelected = selectedStageId === stage.id;
+
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => setSelectedStageId(stage.id)}
+                  className="flex flex-col items-center text-center flex-1 relative z-10 w-full focus:outline-none group cursor-pointer"
+                >
+                  {/* Dot */}
+                  <div
+                    className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
+                      isCompleted
+                        ? 'bg-[#A8C61F] text-white ring-4 ring-green-100 shadow-sm hover:scale-105'
+                        : isCurrent
+                        ? 'bg-[#0072BC] text-white ring-4 ring-blue-100 scale-110 font-extrabold shadow-md'
+                        : 'bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-50'
+                    } ${isSelected ? 'ring-4 ring-offset-2 ring-[#0072BC]/40 scale-105' : ''}`}
+                  >
+                    {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : idx + 1}
+                  </div>
+                  
+                  {/* Labels */}
+                  <div className="mt-3">
+                    <p className={`text-[12px] font-bold leading-snug max-w-[130px] mx-auto transition-colors group-hover:text-[#0072BC] ${
+                      isCurrent ? 'text-[#0072BC] font-extrabold' : isCompleted ? 'text-gray-800 font-semibold' : 'text-gray-400'
+                    }`}>
+                      {stage.label}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-1 max-w-[120px] mx-auto leading-normal">
+                      {stage.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* MOBILE STEPPER VIEW (Vertical Stepper) */}
+        <div className="block md:hidden space-y-3">
+          {journeyStages.map((stage, idx) => {
+            const isCompleted = idx < activeIdx;
+            const isCurrent = idx === activeIdx;
+            const isFuture = idx > activeIdx;
+            const isSelected = selectedStageId === stage.id;
 
             return (
-              <div key={idx} className="flex md:flex-col items-center text-left md:text-center flex-1 relative z-10 w-full">
-                {/* Dot */}
-                <div
-                  className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
-                    isCompleted
-                      ? 'bg-[#A8C61F] text-white ring-4 ring-green-100'
-                      : isCurrent
-                      ? 'bg-[#0072BC] text-white ring-4 ring-blue-100 scale-110 animate-pulse'
-                      : 'bg-gray-100 text-gray-400 border border-gray-200'
-                  }`}
+              <div 
+                key={stage.id}
+                className={`p-3 rounded-xl border transition-all ${
+                  isCurrent ? 'bg-blue-50/10 border-[#0072BC] shadow-sm' : 
+                  isSelected ? 'border-gray-300 bg-gray-50/20' : 'border-gray-100 bg-white'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedStageId(stage.id)}
+                  className="w-full flex items-center justify-between text-left focus:outline-none"
                 >
-                  {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : idx + 1}
-                </div>
-                
-                {/* Labels */}
-                <div className="ml-3 md:ml-0 md:mt-2">
-                  <p className={`text-xs font-bold leading-tight ${isCurrent ? 'text-[#0072BC] font-extrabold' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
-                    {step.label}
-                  </p>
-                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">{step.desc}</p>
-                </div>
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                        isCompleted
+                          ? 'bg-[#A8C61F] text-white'
+                          : isCurrent
+                          ? 'bg-[#0072BC] text-white ring-2 ring-blue-100 font-extrabold'
+                          : 'bg-gray-100 text-gray-400 border border-gray-200'
+                      }`}
+                    >
+                      {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : idx + 1}
+                    </div>
+                    <div>
+                      <p className={`text-[12px] font-bold ${
+                        isCurrent ? 'text-[#0072BC] font-extrabold' : isCompleted ? 'text-gray-800 font-semibold' : 'text-gray-400'
+                      }`}>
+                        {stage.label}
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-medium">{stage.desc}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform ${isSelected ? 'transform rotate-90' : ''}`} />
+                </button>
+
+                {/* Inline Mobile expanded content */}
+                {isSelected && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 text-[11px] space-y-2">
+                    {stage.id === 'pendaftaran_verifikasi' && (
+                      <div className="space-y-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-medium">Pendaftaran</span>
+                          <span className="font-bold text-gray-700">Selesai</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-medium">Verifikasi Identitas</span>
+                          <span className="font-bold text-gray-700">Selesai</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-medium">Verifikasi Binaan TJSL</span>
+                          <span className={`font-bold ${participant.tjslVerificationStatus === 'Terverifikasi' ? 'text-green-600' : 'text-orange-500'}`}>{participant.tjslVerificationStatus || 'Terverifikasi'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 font-medium">Verifikasi Administrasi Usaha</span>
+                          <span className="font-bold text-gray-700">Selesai</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-1.5 mt-1">
+                          <span className="text-[#16365C] font-bold">Eligibility</span>
+                          <span className="font-bold text-[#0072BC]">Eligible — Binaan Terverifikasi</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onTabChange('tjsl_verification')}
+                          className="w-full mt-2 py-1.5 bg-[#0072BC] hover:bg-[#0072BC]/90 text-white rounded-lg text-[10px] font-bold text-center block"
+                        >
+                          Lihat Detail Verifikasi
+                        </button>
+                      </div>
+                    )}
+
+                    {stage.id === 'pembinaan_regional' && (
+                      <div className="grid grid-cols-3 gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100 text-center">
+                        <div>
+                          <span className="text-[8px] text-gray-400 uppercase block">Belajar</span>
+                          <span className="font-extrabold text-[#16365C] text-xs">{participant.learningProgress}%</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] text-gray-400 uppercase block">Hadir</span>
+                          <span className="font-extrabold text-[#16365C] text-xs">{participant.attendanceRate}%</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] text-gray-400 uppercase block">Poin</span>
+                          <span className="font-extrabold text-green-600 text-xs">{participant.challengePoints}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {stage.id === 'kurasi_nasional' && (
+                      <p className="text-gray-500 italic bg-gray-50 p-2 rounded-lg text-center">
+                        Jadwal: Juli 2026. Penilaian berdasarkan rekam jejak regional.
+                      </p>
+                    )}
+
+                    {stage.id === 'pembinaan_nasional' && (
+                      <p className="text-gray-500 italic bg-gray-50 p-2 rounded-lg text-center">
+                        Jadwal: Agustus 2026. Kurikulum ekspor & kemitraan strategis.
+                      </p>
+                    )}
+
+                    {stage.id === 'seleksi_akhir' && (() => {
+                      let top100Status = 'Belum Dinilai';
+                      let calonPagStatus = 'Belum Dinilai';
+
+                      if (participant.stage === 'Graduation' || participant.stage === 'Champions') {
+                        top100Status = 'Lolos';
+                        calonPagStatus = participant.isRecommendedAggregator ? 'Lolos' : 'Tidak Lolos';
+                      } else if (participant.stage === 'Top 100' || participant.stage === 'Top 100 Champion') {
+                        top100Status = 'Lolos';
+                        calonPagStatus = 'Menunggu Finalisasi';
+                      } else if (participant.stage === '100 Calon PAG') {
+                        top100Status = 'Lolos';
+                        calonPagStatus = 'Lolos';
+                      } else if (activeIdx === 4) {
+                        top100Status = 'Sedang Dikurasi';
+                        calonPagStatus = 'Sedang Dikurasi';
+                      }
+
+                      return (
+                        <div className="space-y-1.5 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Status Top 100</span>
+                            <span className="font-bold text-gray-700">{top100Status}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">Status Calon PAG</span>
+                            <span className="font-bold text-gray-700">{calonPagStatus}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {stage.id === 'inaugurasi_champions' && (
+                      <p className="text-gray-500 italic bg-gray-50 p-2 rounded-lg text-center">
+                        Jadwal: Oktober 2026. Apresiasi dan penghargaan lulusan terbaik.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
+        </div>
+
+        {/* DESKTOP INTERACTIVE EXPANDED DETAILS CARD */}
+        <div className="hidden md:block bg-gray-50/50 rounded-2xl p-6 border border-gray-100/80 mt-4">
+          {selectedStageId === 'pendaftaran_verifikasi' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Pendaftaran & Verifikasi</h4>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Penilaian administrasi, legalitas, identitas, dan keaslian status TJSL</p>
+                </div>
+                <span className="px-2.5 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded-full">
+                  Selesai
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs font-mono">✓</span>
+                      <span className="text-xs font-bold text-gray-700">Pendaftaran</span>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">Selesai</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs font-mono">✓</span>
+                      <span className="text-xs font-bold text-gray-700">Verifikasi Identitas</span>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">Selesai</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs font-mono">✓</span>
+                      <span className="text-xs font-bold text-gray-700">Verifikasi Administrasi Usaha</span>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">Selesai</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs font-mono">✓</span>
+                      <span className="text-xs font-bold text-gray-700">Verifikasi Binaan TJSL</span>
+                    </div>
+                    <span className={`text-xs font-bold ${
+                      participant.tjslVerificationStatus === 'Terverifikasi' ? 'text-green-600' :
+                      participant.tjslVerificationStatus === 'Perlu Klarifikasi' ? 'text-orange-500' :
+                      'text-[#0072BC]'
+                    }`}>
+                      {participant.tjslVerificationStatus || 'Terverifikasi'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100 shadow-sm">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-[#0072BC] font-bold text-xs font-mono">✓</span>
+                      <span className="text-xs font-bold text-[#16365C]">Eligibility</span>
+                    </div>
+                    <span className="text-xs font-bold text-[#0072BC]">
+                      Eligible — Binaan Terverifikasi
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-gray-200/50">
+                <button
+                  type="button"
+                  onClick={() => onTabChange('tjsl_verification')}
+                  className="px-4 py-2 bg-[#0072BC] hover:bg-[#0072BC]/90 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm shadow-blue-200"
+                >
+                  <span>Lihat Detail Verifikasi</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {selectedStageId === 'pembinaan_regional' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Pembinaan Regional</h4>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Mentoring regional intensif, penugasan mandiri, dan pengerjaan modul belajar</p>
+                </div>
+                <span className="px-2.5 py-0.5 bg-blue-100 text-[#0072BC] text-[10px] font-bold rounded-full">
+                  Aktif
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Kemajuan Belajar</span>
+                  <span className="text-xl font-extrabold text-[#16365C] block mt-1">{participant.learningProgress}%</span>
+                  <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div className="bg-[#A8C61F] h-full" style={{ width: `${participant.learningProgress}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Tingkat Kehadiran</span>
+                  <span className="text-xl font-extrabold text-[#16365C] block mt-1">{participant.attendanceRate}%</span>
+                  <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div className="bg-[#0072BC] h-full" style={{ width: `${participant.attendanceRate}%` }}></div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Total Poin Tantangan</span>
+                  <span className="text-xl font-extrabold text-green-600 block mt-1">{participant.challengePoints} Poin</span>
+                  <span className="text-[9px] text-gray-400 block mt-2">Selesaikan lebih banyak challenge untuk poin ekstra!</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedStageId === 'kurasi_nasional' && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Kurasi Nasional</h4>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Tahap penyeleksian peserta terbaik dari regional menuju kancah nasional</p>
+                </div>
+                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
+                  Belum Dimulai
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Sesi kurasi nasional dijadwalkan pada bulan <strong className="text-[#0072BC]">Juli 2026</strong>. Penilaian mencakup rekam jejak kehadiran, nilai tantangan/tugas, pertumbuhan omset usaha, kematangan produk, serta kelengkapan sertifikasi legalitas usaha.
+              </p>
+            </div>
+          )}
+
+          {selectedStageId === 'pembinaan_nasional' && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Pembinaan Nasional</h4>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Pembinaan eksklusif untuk peserta tersertifikasi nasional & persiapan pasar global</p>
+                </div>
+                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
+                  Belum Dimulai
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Peserta yang lolos kurasi nasional akan mengikuti program pembinaan intensif pada bulan <strong className="text-[#0072BC]">Agustus 2026</strong>. Fokus materi meliputi peningkatan ekspor, manajemen keuangan tingkat lanjut, penyesuaian regulasi dagang global, serta persiapan pameran SMEXPO 2026.
+              </p>
+            </div>
+          )}
+
+          {selectedStageId === 'seleksi_akhir' && (() => {
+            let top100Status = 'Belum Dinilai';
+            let calonPagStatus = 'Belum Dinilai';
+
+            if (participant.stage === 'Graduation' || participant.stage === 'Champions') {
+              top100Status = 'Lolos';
+              calonPagStatus = participant.isRecommendedAggregator ? 'Lolos' : 'Tidak Lolos';
+            } else if (participant.stage === 'Top 100' || participant.stage === 'Top 100 Champion') {
+              top100Status = 'Lolos';
+              calonPagStatus = 'Menunggu Finalisasi';
+            } else if (participant.stage === '100 Calon PAG') {
+              top100Status = 'Lolos';
+              calonPagStatus = 'Lolos';
+            } else if (activeIdx === 4) {
+              top100Status = 'Sedang Dikurasi';
+              calonPagStatus = 'Sedang Dikurasi';
+            }
+
+            const getBadgeClass = (val: string) => {
+              switch (val) {
+                case 'Lolos':
+                  return 'bg-green-100 text-green-800 border-green-200';
+                case 'Tidak Lolos':
+                  return 'bg-red-100 text-red-800 border-red-200';
+                case 'Sedang Dikurasi':
+                  return 'bg-orange-100 text-orange-800 border-orange-200';
+                case 'Menunggu Finalisasi':
+                  return 'bg-blue-100 text-[#0072BC] border-blue-200 animate-pulse';
+                default:
+                  return 'bg-gray-100 text-gray-500 border-gray-200';
+              }
+            };
+
+            return (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Seleksi Akhir</h4>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Penetapan Top 100 Champion dan 100 Calon Peserta Pertapreneur Aggregator (PAG)</p>
+                  </div>
+                  <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full ${
+                    activeIdx === 4 ? 'bg-blue-100 text-[#0072BC] animate-pulse' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {activeIdx > 4 ? 'Selesai' : activeIdx === 4 ? 'Aktif' : 'Belum Dimulai'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Status Top 100 Champion</span>
+                      <p className="text-xs text-gray-500 mt-0.5">Pemilihan 100 UMK Champion Nasional</p>
+                    </div>
+                    <span className={`px-3 py-1 text-xs font-bold border rounded-lg ${getBadgeClass(top100Status)}`}>
+                      {top100Status}
+                    </span>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">Status Calon PAG</span>
+                      <p className="text-xs text-gray-500 mt-0.5">100 Calon Peserta Pertapreneur Aggregator</p>
+                    </div>
+                    <span className={`px-3 py-1 text-xs font-bold border rounded-lg ${getBadgeClass(calonPagStatus)}`}>
+                      {calonPagStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {selectedStageId === 'inaugurasi_champions' && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center border-b border-gray-200/50 pb-3">
+                <div>
+                  <h4 className="text-sm font-bold text-[#16365C]">Detail Tahap: Inaugurasi & Champions</h4>
+                  <p className="text-[11px] text-gray-500 mt-0.5">Puncak apresiasi penghargaan, pengumuman lulusan terbaik (Champions), dan seremoni kelulusan</p>
+                </div>
+                <span className="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
+                  Belum Dimulai
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Puncak seremonial kelulusan dan penobatan program UMK Academy 2026 dijadwalkan pada bulan <strong className="text-[#0072BC]">Oktober 2026</strong>. Para lulusan terbaik akan diundang dalam gala dinner apresiasi dan berkesempatan mendapatkan hibah pengembangan bisnis lanjutan.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

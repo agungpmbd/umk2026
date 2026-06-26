@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Participant } from '../types';
+import { Participant, TJSLAuditLog } from '../types';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { TrendingUp, FileText, Download, Filter, Sparkles, CheckCircle2, ShieldCheck, Award, Info } from 'lucide-react';
+import { 
+  TrendingUp, FileText, Download, Filter, Sparkles, CheckCircle2, 
+  ShieldCheck, Award, Info, Search, ShieldAlert, Check, X, Clock, AlertTriangle, MessageSquare, AlertCircle
+} from 'lucide-react';
 
 interface ExecutiveDashboardProps {
   participants: Participant[];
@@ -9,7 +12,15 @@ interface ExecutiveDashboardProps {
 }
 
 export default function ExecutiveDashboard({ participants, onUpdateParticipants }: ExecutiveDashboardProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'analitik' | 'kurasi' | 'export'>('analitik');
+  const [activeSubTab, setActiveSubTab] = useState<'analitik' | 'kurasi' | 'export' | 'tjsl_verification'>('analitik');
+  
+  // TJSL states
+  const [selectedPartId, setSelectedPartId] = useState<string>('P001');
+  const [tjslStatusFilter, setTjslStatusFilter] = useState<string>('Semua');
+  const [tjslSubholdingFilter, setTjslSubholdingFilter] = useState<string>('Semua');
+  const [tjslSearch, setTjslSearch] = useState<string>('');
+  const [adminNotes, setAdminNotes] = useState<string>('');
+  const [activeAction, setActiveAction] = useState<'approve' | 'clarify' | 'decline' | null>(null);
   const [regionFilter, setRegionFilter] = useState('Semua');
   const [sectorFilter, setSectorFilter] = useState('Semua');
   const [exportingType, setExportingType] = useState<string | null>(null);
@@ -86,7 +97,7 @@ export default function ExecutiveDashboard({ participants, onUpdateParticipants 
         </div>
 
         {/* View Switches */}
-        <div className="flex bg-gray-100 p-1.5 rounded-xl border space-x-1">
+        <div className="flex flex-wrap bg-gray-100 p-1.5 rounded-xl border gap-1">
           <button
             onClick={() => setActiveSubTab('analitik')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
@@ -102,6 +113,17 @@ export default function ExecutiveDashboard({ participants, onUpdateParticipants 
             }`}
           >
             Kurasi & Rekomendasi
+          </button>
+          <button
+            onClick={() => setActiveSubTab('tjsl_verification')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all relative ${
+              activeSubTab === 'tjsl_verification' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Verifikasi TJSL
+            {participants.some(p => p.tjslVerificationStatus === 'Menunggu Verifikasi') && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-white"></span>
+            )}
           </button>
           <button
             onClick={() => setActiveSubTab('export')}
@@ -418,6 +440,438 @@ export default function ExecutiveDashboard({ participants, onUpdateParticipants 
 
         </div>
       )}
+
+      {/* VIEW: TJSL VERIFICATION QUEUE */}
+      {activeSubTab === 'tjsl_verification' && (() => {
+        // Filter participants who have some TJSL data
+        const tjslParticipants = participants.filter(p => {
+          const hasTjslData = !!p.tjslVerificationStatus;
+          if (!hasTjslData) return false;
+
+          const matchesSearch = p.name.toLowerCase().includes(tjslSearch.toLowerCase()) || 
+                                p.businessName.toLowerCase().includes(tjslSearch.toLowerCase());
+          
+          const matchesStatus = tjslStatusFilter === 'Semua' || p.tjslVerificationStatus === tjslStatusFilter;
+          
+          const claimSubholding = p.tjslClaim?.subholding || '';
+          const matchesSubholding = tjslSubholdingFilter === 'Semua' || claimSubholding === tjslSubholdingFilter;
+
+          return matchesSearch && matchesStatus && matchesSubholding;
+        });
+
+        // Current selected participant
+        const selectedPart = participants.find(p => p.id === selectedPartId) || tjslParticipants[0];
+
+        // Hardcoded matching simulation helper
+        const getDbMatch = (pId: string) => {
+          if (pId === 'P001') {
+            return {
+              found: true,
+              mitraId: 'PUMK-2024-88392',
+              name: 'Siti Rahmawati',
+              programAsal: 'Program PUMK Pertamina',
+              subholding: 'PT Pertamina Patra Niaga',
+              region: 'Jawa Tengah',
+              tahun: 2024,
+              statusProgram: 'Aktif',
+              mismatchFields: [] as string[]
+            };
+          }
+          if (pId === 'P006') {
+            return {
+              found: true,
+              mitraId: 'PUMK-2024-91823',
+              name: 'Ahmad Hidayat',
+              programAsal: 'Program PUMK Pertamina',
+              subholding: 'PHE (Pertamina Hulu Energi)',
+              region: 'Jawa Barat',
+              tahun: 2024,
+              statusProgram: 'Aktif',
+              mismatchFields: [] as string[]
+            };
+          }
+          if (pId === 'P007') {
+            return {
+              found: true,
+              mitraId: 'RB-2023-44122',
+              name: 'Maria Lestari',
+              programAsal: 'Rumah BUMN Pertamina',
+              subholding: 'PT Pertamina Patra Niaga',
+              region: 'Yogyakarta',
+              tahun: 2023,
+              statusProgram: 'Alumni',
+              mismatchFields: ['tahun', 'subholding']
+            };
+          }
+          return {
+            found: false,
+            reason: 'NIK atau Nama tidak terdaftar di Satu Data SMEPP.'
+          };
+        };
+
+        const currentMatch = selectedPart ? getDbMatch(selectedPart.id) : null;
+
+        const handleAuditAction = (status: 'Terverifikasi' | 'Perlu Klarifikasi' | 'Tidak Eligible', notesText: string) => {
+          if (!selectedPart) return;
+
+          const actionLabel = status === 'Terverifikasi' ? 'Status diperbarui menjadi Terverifikasi' :
+                              status === 'Perlu Klarifikasi' ? 'Status diperbarui menjadi Perlu Klarifikasi' :
+                              'Status diperbarui menjadi Tidak Eligible';
+
+          const newLog: TJSLAuditLog = {
+            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            action: actionLabel,
+            pic: 'Admin SMEPP (Pusat)',
+            notes: notesText || (status === 'Terverifikasi' ? 'Klaim data terbukti sah dalam database Satu Data SMEPP.' : 'Diperbarui oleh Admin.')
+          };
+
+          const updated = participants.map(p => {
+            if (p.id === selectedPart.id) {
+              return {
+                ...p,
+                tjslVerificationStatus: status,
+                tjslLogs: [newLog, ...(p.tjslLogs || [])]
+              };
+            }
+            return p;
+          });
+
+          onUpdateParticipants(updated);
+          setActiveAction(null);
+          setAdminNotes('');
+        };
+
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* LEFT COLUMN: LIST AND FILTERS (5 COLS) */}
+            <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+              <div className="border-b pb-2">
+                <h3 className="font-extrabold text-sm text-[#16365C] uppercase tracking-wider">Antrean Verifikasi Binaan</h3>
+                <p className="text-[11px] text-gray-400 mt-0.5">Tinjau klaim dan berkas afiliasi program TJSL Pertamina</p>
+              </div>
+
+              {/* SEARCH & FILTERS */}
+              <div className="space-y-2 text-xs">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={tjslSearch}
+                    onChange={(e) => setTjslSearch(e.target.value)}
+                    placeholder="Cari nama peserta atau bisnis..."
+                    className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0072BC]"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-gray-400 font-bold mb-1">Status Verifikasi</label>
+                    <select
+                      value={tjslStatusFilter}
+                      onChange={(e) => setTjslStatusFilter(e.target.value)}
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs"
+                    >
+                      <option value="Semua">Semua Status</option>
+                      <option value="Terverifikasi">Terverifikasi</option>
+                      <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                      <option value="Perlu Klarifikasi">Perlu Klarifikasi</option>
+                      <option value="Tidak Eligible">Tidak Eligible</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-gray-400 font-bold mb-1">Subholding Asal</label>
+                    <select
+                      value={tjslSubholdingFilter}
+                      onChange={(e) => setTjslSubholdingFilter(e.target.value)}
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs"
+                    >
+                      <option value="Semua">Semua Subholding</option>
+                      <option value="PT Pertamina Patra Niaga">Patra Niaga</option>
+                      <option value="PHE (Pertamina Hulu Energi)">PHE (Hulu Energi)</option>
+                      <option value="Rumah BUMN Pertamina">Rumah BUMN</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* PARTICIPANTS LIST */}
+              <div className="space-y-2.5 overflow-y-auto max-h-[480px] pr-1">
+                {tjslParticipants.length > 0 ? (
+                  tjslParticipants.map(p => {
+                    const isSelected = p.id === selectedPartId;
+                    const claimStatus = p.tjslVerificationStatus;
+                    
+                    const badgeStyle = 
+                      claimStatus === 'Terverifikasi' ? 'bg-green-100 text-green-800' :
+                      claimStatus === 'Perlu Klarifikasi' ? 'bg-orange-100 text-orange-800' :
+                      claimStatus === 'Menunggu Verifikasi' ? 'bg-blue-100 text-[#0072BC]' :
+                      'bg-red-100 text-red-800';
+
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setSelectedPartId(p.id);
+                          setActiveAction(null);
+                        }}
+                        className={`p-3 rounded-xl border cursor-pointer transition text-xs space-y-2 ${
+                          isSelected ? 'border-[#0072BC] bg-blue-50/10 shadow-sm' : 'border-gray-100 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-mono text-gray-400 block">{p.id}</span>
+                            <span className="font-extrabold text-gray-800">{p.name}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeStyle}`}>
+                            {claimStatus}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] text-gray-500 font-medium">
+                          <span>{p.businessName}</span>
+                          <span className="text-gray-400 font-semibold">{p.tjslClaim?.subholding || 'Pendaftaran Mandiri'}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-8 text-center bg-gray-50 rounded-xl border">
+                    <AlertCircle className="h-6 w-6 text-gray-400 mx-auto mb-1.5" />
+                    <p className="text-xs font-bold text-gray-500">Antrean Kosong</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Tidak ditemukan peserta dengan parameter penyaringan tersebut.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: SIDE-BY-SIDE COMPARE & AUDIT PANEL (7 COLS) */}
+            <div className="lg:col-span-7 space-y-6">
+              {selectedPart ? (
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+                  
+                  {/* Participant Meta */}
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3.5 gap-2">
+                    <div>
+                      <span className="text-[10px] font-mono text-[#0072BC] font-extrabold block">PROFIL MITRA BINAAN</span>
+                      <h3 className="font-extrabold text-base text-[#16365C]">{selectedPart.name}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{selectedPart.businessName} • {selectedPart.sector}</p>
+                    </div>
+                    <div className="bg-gray-50 px-3 py-1.5 rounded-lg border text-right">
+                      <span className="text-[9px] text-gray-400 block font-bold">NIK PEMILIK</span>
+                      <span className="text-xs font-mono font-bold text-gray-700">3374092209840001</span>
+                    </div>
+                  </div>
+
+                  {/* COMPARISON TABLES */}
+                  <div className="space-y-3.5">
+                    <h4 className="text-xs font-bold uppercase text-[#0072BC] flex items-center gap-1.5">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Sanding Berkas Klaim vs Database PUMK Nasional</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Left: Klaim Input Peserta */}
+                      <div className="p-3.5 bg-gray-50 border border-gray-200/60 rounded-xl space-y-2.5 text-xs">
+                        <div className="border-b pb-1">
+                          <span className="font-extrabold text-[10px] text-gray-500 block">KLAIM MANDIRI PESERTA</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-gray-400 block font-semibold">Asal Program</span>
+                          <span className="font-bold text-gray-800">{selectedPart.tjslClaim?.programAsal}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-gray-400 block font-semibold">Subholding Penanggung</span>
+                          <span className="font-bold text-gray-800">{selectedPart.tjslClaim?.subholding || '-'}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-[9px] text-gray-400 block font-semibold">Tahun</span>
+                            <span className="font-bold font-mono text-gray-800">{selectedPart.tjslClaim?.tahun || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-gray-400 block font-semibold">Mitra ID</span>
+                            <span className="font-bold font-mono text-[#0072BC]">{selectedPart.tjslClaim?.mitraId || '-'}</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-[9px] text-gray-400 block font-semibold">Region</span>
+                            <span className="font-bold text-gray-800">{selectedPart.tjslClaim?.region || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-gray-400 block font-semibold">PIC Pendamping</span>
+                            <span className="font-bold text-gray-800">{selectedPart.tjslClaim?.picName || '-'}</span>
+                          </div>
+                        </div>
+                        <div className="border-t pt-2 mt-1">
+                          <span className="text-[9px] text-gray-400 block font-semibold">Lampiran Berkas Bukti</span>
+                          <span className="font-bold text-[#ED1B2F] flex items-center gap-1 cursor-pointer">
+                            <FileText className="h-3 w-3 shrink-0" />
+                            <span>{selectedPart.tjslClaim?.evidenceFile || 'Tidak dilampirkan'}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Data Padanan Database */}
+                      <div className="p-3.5 bg-blue-50/20 border border-blue-100 rounded-xl space-y-2.5 text-xs">
+                        <div className="border-b pb-1 flex justify-between items-center">
+                          <span className="font-extrabold text-[10px] text-[#0072BC] block">DATABASE SATU DATA SMEPP</span>
+                          {currentMatch && 'found' in currentMatch && currentMatch.found ? (
+                            <span className="bg-green-100 text-green-800 px-1.5 py-0.2 rounded text-[8px] font-bold">Matched</span>
+                          ) : (
+                            <span className="bg-red-100 text-red-800 px-1.5 py-0.2 rounded text-[8px] font-bold">No Match</span>
+                          )}
+                        </div>
+
+                        {currentMatch && 'found' in currentMatch && currentMatch.found ? (
+                          <>
+                            <div>
+                              <span className="text-[9px] text-gray-400 block font-semibold">Asal Program (Database)</span>
+                              <span className="font-bold text-green-800">{currentMatch.programAsal}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-gray-400 block font-semibold">Subholding (Database)</span>
+                              <span className="font-bold text-green-800">{currentMatch.subholding}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="text-[9px] text-gray-400 block font-semibold">Tahun</span>
+                                <span className={`font-bold font-mono ${currentMatch.mismatchFields.includes('tahun') ? 'text-red-500 font-extrabold' : 'text-green-800'}`}>
+                                  {currentMatch.tahun}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] text-gray-400 block font-semibold">Mitra ID</span>
+                                <span className="font-bold font-mono text-green-800">{currentMatch.mitraId}</span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="text-[9px] text-gray-400 block font-semibold">Region</span>
+                                <span className="font-bold text-green-800">{currentMatch.region}</span>
+                              </div>
+                              <div>
+                                <span className="text-[9px] text-gray-400 block font-semibold">Penerima Manfaat</span>
+                                <span className="font-bold text-green-800">{currentMatch.name}</span>
+                              </div>
+                            </div>
+                            <div className="border-t pt-2 mt-1">
+                              <span className="text-[9px] text-gray-400 block font-semibold">Status Pembinaan</span>
+                              <span className="px-1.5 py-0.1 bg-green-100 text-green-800 text-[9px] rounded-full font-bold inline-block mt-0.5">
+                                {currentMatch.statusProgram}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-1.5">
+                            <ShieldAlert className="h-6 w-6 text-red-500" />
+                            <span className="font-extrabold text-[11px] text-gray-700">Padanan Tidak Ditemukan</span>
+                            <p className="text-[10px] text-gray-400 max-w-[180px] leading-normal">
+                              {currentMatch && 'reason' in currentMatch ? currentMatch.reason : 'NIK tidak terdaftar sebagai penerima hibah binaan.'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* INTERACTIVE ACTION BUTTONS */}
+                  <div className="border-t pt-4 space-y-3">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide block">Tindakan Audit Lapangan:</span>
+                    
+                    {activeAction === null ? (
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          onClick={() => handleAuditAction('Terverifikasi', 'Data klaim divalidasi dan lolos verifikasi Satu Data SMEPP.')}
+                          className="py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-xs flex justify-center items-center gap-1.5 transition shadow"
+                        >
+                          <Check className="h-4 w-4" />
+                          <span>Setujui Klaim</span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveAction('clarify')}
+                          className="py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-xs flex justify-center items-center gap-1.5 transition shadow"
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          <span>Minta Klarifikasi</span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveAction('decline')}
+                          className="py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs flex justify-center items-center gap-1.5 transition shadow"
+                        >
+                          <X className="h-4 w-4" />
+                          <span>Tolak Klaim</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3.5 text-xs">
+                        <div className="flex justify-between items-center font-bold text-gray-700 border-b pb-1.5">
+                          <span>
+                            {activeAction === 'clarify' ? 'Alasan Klarifikasi Tambahan' : 'Alasan Penolakan Klaim (Tidak Eligible)'}
+                          </span>
+                          <button onClick={() => setActiveAction(null)} className="text-gray-400 hover:text-gray-600">
+                            Batal
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={3}
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          placeholder={activeAction === 'clarify' ? 'Tulis berkas apa yang harus diperbaiki oleh mitra (misal: upload ulang sertifikat)...' : 'Tulis alasan rincik mengapa mitra ini diklasifikasikan tidak eligible...'}
+                          className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs text-gray-800"
+                        />
+
+                        <button
+                          onClick={() => handleAuditAction(activeAction === 'clarify' ? 'Perlu Klarifikasi' : 'Tidak Eligible', adminNotes)}
+                          className={`w-full py-2.5 text-white font-bold rounded-xl text-xs flex justify-center items-center gap-1.5 transition ${
+                            activeAction === 'clarify' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-red-600 hover:bg-red-700'
+                          }`}
+                        >
+                          <span>Kirim Keputusan & Catat Log</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* HISTORY / AUDIT LOG TIMELINE */}
+                  <div className="border-t pt-4 space-y-3">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide block">Log Riwayat Verifikasi Berkas:</span>
+                    <div className="relative border-l-2 border-gray-100 pl-4 space-y-3 text-xs">
+                      {selectedPart.tjslLogs && selectedPart.tjslLogs.length > 0 ? (
+                        selectedPart.tjslLogs.map((log, index) => (
+                          <div key={index} className="relative">
+                            <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-[#0072BC]"></span>
+                            <div className="text-[10px] text-gray-400 font-semibold">{log.date}</div>
+                            <div className="font-extrabold text-gray-800 mt-0.5">{log.action}</div>
+                            <div className="text-[10px] text-gray-500 font-medium mt-0.5">Oleh: {log.pic || log.actor}</div>
+                            <p className="text-[10px] text-gray-400 mt-0.5 italic">"{log.notes}"</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-400 italic">Belum ada riwayat audit log.</p>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="bg-white p-10 text-center rounded-2xl border">
+                  <AlertCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-400">Pilih peserta di daftar antrean untuk mulai mengaudit.</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        );
+      })()}
 
     </div>
   );

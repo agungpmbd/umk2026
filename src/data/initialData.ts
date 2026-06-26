@@ -86,7 +86,29 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
       recommendation90Days: 'Rancang katalog produk bahasa Inggris dan ikuti seleksi kurasi SMEXPO 2026.',
       smexpoReadiness: 'Proses Kurasi',
       aggregatorReadiness: 'Belum Siap'
-    }
+    },
+    tjslStatus: 'Binaan Terverifikasi',
+    tjslVerificationStatus: 'Terverifikasi',
+    tjslClaim: {
+      isBinaan: 'Ya',
+      programAsal: 'PFpreneur',
+      subholding: 'Pertamina Patra Niaga',
+      region: 'Jawa Tengah',
+      tahun: 2025,
+      mitraId: 'PF-2025-0819',
+      picName: 'Ibu Rini (SMEPP)',
+      statusProgram: 'Alumni',
+      evidenceFile: 'sertifikat_pfpreneur_siti.pdf',
+      notes: 'Lulusan terbaik program kewirausahaan perempuan PFpreneur 2025 regional Jawa Tengah.',
+      consent: true,
+      dbMatchStatus: 'Match',
+      dbMatchDetails: 'Ditemukan di Sistem Database Pusat SMEPP: NIK 3374025112830001 cocok 100%. Nama Usaha "Rasa Nusantara" cocok 100%.'
+    },
+    tjslLogs: [
+      { date: '2026-06-20 09:00', action: 'Submit Pendaftaran', pic: 'Siti Rahmawati', notes: 'Mengisi klaim afiliasi program PFpreneur 2025.' },
+      { date: '2026-06-21 14:30', action: 'Verifikasi Database', pic: 'Sistem SMEPP', notes: 'Pencocokan otomatis database pusat berhasil. NIK dan nama usaha terdaftar valid.' },
+      { date: '2026-06-22 10:15', action: 'Persetujuan Final', pic: 'Dra. Sri Wahyuni (Fasilitator)', notes: 'Klaim terverifikasi sebagai Binaan Terverifikasi.' }
+    ]
   },
   {
     id: 'P002',
@@ -388,7 +410,295 @@ export const INITIAL_PARTICIPANTS: Participant[] = [
       recommendation90Days: 'Ikuti program business matching tingkat nasional di SMEXPO.',
       smexpoReadiness: 'Siap',
       aggregatorReadiness: 'Siap'
-    }
+    },
+    tjslStatus: 'Belum Diperiksa',
+    tjslVerificationStatus: 'Draft',
+    tjslClaim: { isBinaan: 'Belum' }
+  },
+  {
+    id: 'P006',
+    name: 'Ahmad Hidayat',
+    businessName: 'Kopi Lereng',
+    sector: 'Agribisnis',
+    region: 'Jawa Barat',
+    stage: 'Verifikasi Status Binaan TJSL',
+    status: 'Aktif',
+    riskStatus: 'Perlu Perhatian',
+    lastLogin: '2026-06-25 10:12',
+    challengePoints: 320,
+    learningProgress: 20,
+    attendanceRate: 75,
+    overallScore: 60,
+    passport: {
+      ownerName: 'Ahmad Hidayat',
+      ownerIdentity: {
+        nik: '3204120904850002',
+        email: 'ahmad.kopilereng@gmail.com',
+        phone: '0812-7766-5544',
+        address: 'Jl. Lereng Gunung Puntang No. 15, Bandung, Jawa Barat',
+        gender: 'Laki-laki'
+      },
+      businessName: 'Kopi Lereng',
+      sector: 'Agribisnis',
+      subsector: 'Kopi Arabika Single Origin',
+      region: 'Jawa Barat',
+      establishedYear: 2022,
+      description: 'Menyediakan kopi arabika specialty hasil ceri pilihan lereng Gunung Puntang Jawa Barat.',
+      mainProducts: ['Kopi Puntang Honey', 'Kopi Puntang Arabica'],
+      financials: {
+        revenueBaseline: 8000000,
+        revenueCurrent: 9200000,
+        profitBaseline: 2500000,
+        profitCurrent: 3100000,
+        employeesBaseline: 2,
+        employeesCurrent: 2,
+        digitalChannelsBaseline: 1,
+        digitalChannelsCurrent: 1,
+        loanSource: 'None',
+        loanAmount: 0,
+        hasBankAccount: true,
+        useQRIS: true,
+        usePOS: false
+      },
+      certifications: [
+        { name: 'NIB (Nomor Induk Berusaha)', status: 'Terverifikasi', expiryDate: 'Seumur Hidup', number: '9120048123011', evidenceUrl: 'nib_ahmad.pdf' }
+      ],
+      sustainability: {
+        wasteManagement: 'Ampas kopi digunakan untuk pakan ternak kambing dan pupuk tanaman sayur.',
+        ecoMaterials: 'Kemasan kertas kopi daur ulang.',
+        energySaving: 'Pengeringan manual sinar matahari.'
+      },
+      marketArea: 'Bandung',
+      suppliers: 'Petani Lereng Puntang',
+      partners: 'Koperasi Kopi Lokal',
+      dataConfidenceLevel: 75,
+      completeness: 65
+    },
+    capabilities: [
+      { name: 'Keuangan', score: 60, target: 80, recommendation: 'Pisahkan keuangan pribadi dan usaha secara konsisten.' }
+    ],
+    actionPlans: [],
+    developmentCard: {
+      strengths: ['Bahan baku berkualitas tinggi', 'Penguasaan proses pasca panen'],
+      weaknesses: ['Pemasaran digital sangat terbatas', 'Belum memiliki perizinan lengkap'],
+      recommendation30Days: 'Selesaikan verifikasi status binaan untuk membuka akses pembinaan penuh.',
+      recommendation60Days: 'Ajukan pendampingan sertifikasi halal.',
+      recommendation90Days: 'Mulai jualan online di Tokopedia.',
+      smexpoReadiness: 'Belum Siap',
+      aggregatorReadiness: 'Belum Siap'
+    },
+    tjslStatus: 'Perlu Klarifikasi',
+    tjslVerificationStatus: 'Menunggu Klarifikasi',
+    tjslClaim: {
+      isBinaan: 'Pernah',
+      programAsal: 'Rumah BUMN Pertamina',
+      rumahBumn: 'Rumah BUMN Bandung',
+      region: 'Jawa Barat',
+      tahun: 2024,
+      mitraId: 'RB-Bdg-412',
+      picName: 'Pak Dedi',
+      statusProgram: 'Alumni',
+      evidenceFile: 'kartu_rumah_bumn_ahmad.jpg',
+      notes: 'Pernah terdaftar mengikuti pembinaan kemasan di Rumah BUMN Pertamina Bandung tahun 2024.',
+      consent: true,
+      dbMatchStatus: 'Partial',
+      dbMatchDetails: 'Database Match Result: NIK tidak ditemukan langsung di database pusat SMEPP, namun nama usaha "Kopi Lereng" terdaftar di Rumah BUMN Bandung atas nama "Ahmad H." dengan nomor telepon lama "0812-1122-3344". Perlu verifikasi ulang NIK dan nomor telepon.'
+    },
+    tjslLogs: [
+      { date: '2026-06-21 11:00', action: 'Submit Pendaftaran', pic: 'Ahmad Hidayat', notes: 'Mengisi klaim afiliasi program Rumah BUMN.' },
+      { date: '2026-06-22 09:15', action: 'Pemeriksaan Otomatis', pic: 'Sistem SMEPP', notes: 'Pencocokan nama usaha parsial ditemukan. NIK tidak cocok langsung.' },
+      { date: '2026-06-23 15:40', action: 'Butuh Klarifikasi', pic: 'Dra. Sri Wahyuni (Fasilitator)', notes: 'Klaim diset sebagai Perlu Klarifikasi. Menunggu unggahan nomor telepon lama atau konfirmasi kepemilikan.' }
+    ]
+  },
+  {
+    id: 'P007',
+    name: 'Maria Lestari',
+    businessName: 'Tenun Lestari',
+    sector: 'Fesyen & Wastra',
+    region: 'Nusa Tenggara Timur',
+    stage: 'Verifikasi Status Binaan TJSL',
+    status: 'Aktif',
+    riskStatus: 'Aman',
+    lastLogin: '2026-06-26 08:34',
+    challengePoints: 420,
+    learningProgress: 40,
+    attendanceRate: 85,
+    overallScore: 70,
+    passport: {
+      ownerName: 'Maria Lestari',
+      ownerIdentity: {
+        nik: '5303125211840003',
+        email: 'maria.lestari@tenunlestari.id',
+        phone: '0813-5544-3322',
+        address: 'Jl. Raya Kupang - Baa No. 24, Rote Ndao, NTT',
+        gender: 'Perempuan'
+      },
+      businessName: 'Tenun Lestari',
+      sector: 'Fesyen & Wastra',
+      subsector: 'Kain Tenun Ikat Pewarna Alami',
+      region: 'Nusa Tenggara Timur',
+      establishedYear: 2021,
+      description: 'Tenun ikat tradisional Rote Ndao menggunakan pewarna alami tumbuhan pesisir pantai.',
+      mainProducts: ['Selendang Tenun Rote', 'Sarung Tenun Ikat'],
+      financials: {
+        revenueBaseline: 10000000,
+        revenueCurrent: 11200000,
+        profitBaseline: 3500000,
+        profitCurrent: 4200000,
+        employeesBaseline: 5,
+        employeesCurrent: 6,
+        digitalChannelsBaseline: 1,
+        digitalChannelsCurrent: 2,
+        loanSource: 'None',
+        loanAmount: 0,
+        hasBankAccount: true,
+        useQRIS: false,
+        usePOS: false
+      },
+      certifications: [
+        { name: 'NIB (Nomor Induk Berusaha)', status: 'Terverifikasi', expiryDate: 'Seumur Hidup', number: '9120038271011', evidenceUrl: 'nib_maria.pdf' }
+      ],
+      sustainability: {
+        wasteManagement: 'Air sisa pewarnaan alami tumbuhan aman dibuang ke tanah kebun.',
+        ecoMaterials: 'Benang katun organik dengan zat pewarna daun bakau dan kunyit.',
+        energySaving: 'Alat tenun bukan mesin (ATBM) manual.'
+      },
+      marketArea: 'Kupang',
+      suppliers: 'Kelompok Ibu-ibu Penenun Rote',
+      partners: 'Dinas Koperasi dan UMKM Rote Ndao',
+      dataConfidenceLevel: 80,
+      completeness: 70
+    },
+    capabilities: [
+      { name: 'Keuangan', score: 65, target: 80, recommendation: 'Mulai lakukan pembukuan kas digital sederhana.' }
+    ],
+    actionPlans: [],
+    developmentCard: {
+      strengths: ['Konsep ramah lingkungan murni', 'Produk bernilai budaya tinggi'],
+      weaknesses: ['Akses internet dan pengiriman barang mahal', 'Kurang pengetahuan legalitas nasional'],
+      recommendation30Days: 'Dapatkan persetujuan SMEPP untuk program eksternal.',
+      recommendation60Days: 'Daftarkan merek usaha ke HKI.',
+      recommendation90Days: 'Mulai tawarkan ke pasar ekspatriat Bali.',
+      smexpoReadiness: 'Belum Siap',
+      aggregatorReadiness: 'Belum Siap'
+    },
+    tjslStatus: 'Perlu Persetujuan SMEPP',
+    tjslVerificationStatus: 'Menunggu Persetujuan',
+    tjslClaim: {
+      isBinaan: 'Pernah',
+      programAsal: 'Program Pertamina lainnya',
+      programAsalLainnya: 'Binaan CSR Subholding Hulu Pertamina Sumbagsel (Program Eksternal Wilayah Terpencil)',
+      subholding: 'Pertamina Hulu Energi',
+      region: 'Sumatera Bagian Selatan',
+      tahun: 2023,
+      mitraId: 'CSR-PHE-2023-09',
+      picName: 'Ibu Anita (CSR PHE)',
+      statusProgram: 'Alumni',
+      evidenceFile: 'surat_keterangan_csr_phe.pdf',
+      notes: 'Pernah dibina dalam program pemberdayaan perempuan tenun pesisir oleh CSR Pertamina Hulu Energi (PHE) Wilayah Rote Ndao (wilayah operasi penunjang eksplorasi lepas pantai). Data tidak di-upload ke server database utama SMEPP karena bersifat program sosial lokal.',
+      consent: true,
+      dbMatchStatus: 'No History',
+      dbMatchDetails: 'Database Match Result: NIK tidak ditemukan dalam database utama pusat SMEPP. Namun bukti surat keterangan berstempel basah dari PHE terlampir lengkap dan tanda tangan PIC valid. Memerlukan persetujuan administrator SMEPP Pusat.'
+    },
+    tjslLogs: [
+      { date: '2026-06-22 14:00', action: 'Submit Pendaftaran', pic: 'Maria Lestari', notes: 'Mengisi klaim pembinaan via CSR PHE.' },
+      { date: '2026-06-23 10:10', action: 'Pemeriksaan Otomatis', pic: 'Sistem SMEPP', notes: 'Pencarian database pusat gagal (No History).' },
+      { date: '2026-06-24 16:30', action: 'Eskalasi ke SMEPP', pic: 'Dra. Sri Wahyuni (Fasilitator)', notes: 'Fasilitator memeriksa dokumen pendukung eksternal, validitas terbukti. Dieksalasi ke Tim SMEPP Pusat untuk persetujuan final status bersyarat (Perlu Persetujuan SMEPP).' }
+    ]
+  },
+  {
+    id: 'P008',
+    name: 'Deni Saputra',
+    businessName: 'Dapur Deni',
+    sector: 'Food & Beverage',
+    region: 'Jawa Timur',
+    stage: 'Verifikasi Status Binaan TJSL',
+    status: 'Pasif',
+    riskStatus: 'Berisiko',
+    lastLogin: '2026-06-20 09:30',
+    challengePoints: 100,
+    learningProgress: 10,
+    attendanceRate: 40,
+    overallScore: 35,
+    passport: {
+      ownerName: 'Deni Saputra',
+      ownerIdentity: {
+        nik: '3578011210920004',
+        email: 'deni.dapur@gmail.com',
+        phone: '0812-4433-2211',
+        address: 'Jl. Dupak No. 120, Surabaya, Jawa Timur',
+        gender: 'Laki-laki'
+      },
+      businessName: 'Dapur Deni',
+      sector: 'Food & Beverage',
+      subsector: 'Aneka Sambal Goreng Kentang',
+      region: 'Jawa Timur',
+      establishedYear: 2023,
+      description: 'Memproduksi sambal goreng kentang kering untuk lauk praktis keluarga.',
+      mainProducts: ['Kentang Kering Pedas'],
+      financials: {
+        revenueBaseline: 5000000,
+        revenueCurrent: 5000000,
+        profitBaseline: 1500000,
+        profitCurrent: 1500000,
+        employeesBaseline: 1,
+        employeesCurrent: 1,
+        digitalChannelsBaseline: 0,
+        digitalChannelsCurrent: 0,
+        loanSource: 'None',
+        loanAmount: 0,
+        hasBankAccount: false,
+        useQRIS: false,
+        usePOS: false
+      },
+      certifications: [
+        { name: 'NIB (Nomor Induk Berusaha)', status: 'Proses', expiryDate: '-', number: '-', evidenceUrl: '' }
+      ],
+      sustainability: {
+        wasteManagement: 'Dibuang langsung ke bak sampah warga.',
+        ecoMaterials: 'Kemasan mika plastik bening tipis sekali pakai.',
+        energySaving: 'Kompor minyak biasa.'
+      },
+      marketArea: 'Surabaya',
+      suppliers: 'Pasar Dupak',
+      partners: 'Warung makan sekitar',
+      dataConfidenceLevel: 40,
+      completeness: 35
+    },
+    capabilities: [
+      { name: 'Keuangan', score: 35, target: 70, recommendation: 'Mulai catat pengeluaran dan pemasukan harian.' }
+    ],
+    actionPlans: [],
+    developmentCard: {
+      strengths: ['Rasa produk disukai warga sekitar'],
+      weaknesses: ['Kemasan kurang aman dan menarik', 'Pencatatan nihil'],
+      recommendation30Days: 'Lengkapi data identitas dan afiliasi dengan benar.',
+      recommendation60Days: 'Ikuti webinar dasar keuangan.',
+      recommendation90Days: 'Urus NIB.',
+      smexpoReadiness: 'Belum Siap',
+      aggregatorReadiness: 'Belum Siap'
+    },
+    tjslStatus: 'Tidak Eligible',
+    tjslVerificationStatus: 'Tidak Terverifikasi',
+    tjslClaim: {
+      isBinaan: 'Ya',
+      programAsal: 'Program PUMK Pertamina',
+      region: 'Jawa Timur',
+      tahun: 2024,
+      mitraId: 'PUMK-JT-2024-998',
+      picName: 'Bapak Rudi',
+      statusProgram: 'Aktif',
+      evidenceFile: 'bukti_pumk_palsu.jpg',
+      notes: 'Mengajukan pinjaman lunak PUMK pada region Jawa Timur tahun lalu dan sudah disetujui.',
+      consent: true,
+      dbMatchStatus: 'Inconsistent',
+      dbMatchDetails: 'Database Match Result: NIK 3578011210920004 terdaftar di sistem pusat atas nama orang lain "Hendra Wijaya". Sedangkan ID Mitra Binaan "PUMK-JT-2024-998" terdaftar untuk badan usaha kriya "Ganesha Art". Bukti unggahan sertifikat yang dilampirkan adalah hasil suntingan (mismatched/duplicate identity). Terdeteksi indikasi pemalsuan berkas.'
+    },
+    tjslLogs: [
+      { date: '2026-06-23 15:00', action: 'Submit Pendaftaran', pic: 'Deni Saputra', notes: 'Mengisi klaim afiliasi program PUMK.' },
+      { date: '2026-06-24 11:20', action: 'Pemeriksaan Otomatis', pic: 'Sistem SMEPP', notes: 'Terdeteksi bentrokan data NIK dan ID Mitra Binaan di database pusat.' },
+      { date: '2026-06-25 10:45', action: 'Tolak Verifikasi', pic: 'Dra. Sri Wahyuni (Fasilitator)', notes: 'Klaim ditolak secara permanen karena ketidaksesuaian data identitas yang ekstrem (Inconsistent).' }
+    ]
   }
 ];
 

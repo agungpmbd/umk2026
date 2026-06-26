@@ -17,12 +17,13 @@ import ProgramImpact from './components/ProgramImpact';
 import HelpdeskSupport from './components/HelpdeskSupport';
 import FacilitatorDashboard from './components/FacilitatorDashboard';
 import ExecutiveDashboard from './components/ExecutiveDashboard';
+import TJSLStatusView from './components/TJSLStatusView';
 
 // Lucide Icons
 import {
   Menu, Bell, ChevronDown, User, LogOut, LayoutDashboard, FileText, BookOpen,
   Trophy, Calendar, Users, Award, ShieldAlert, HeartHandshake, HelpCircle, Key,
-  Sparkles, CheckCircle2, ChevronRight
+  Sparkles, CheckCircle2, ChevronRight, ShieldCheck
 } from 'lucide-react';
 
 // Map & enrich participants so they satisfy the full type requirements (challenges list, SROI / curation flags)
@@ -35,7 +36,11 @@ const enrichedParticipantsList: Participant[] = INITIAL_PARTICIPANTS.map(p => ({
   isRecommendedSMEXPO: p.id === 'P001' || p.id === 'P002',
   isRecommendedAggregator: p.id === 'P002',
   isUMKMTroopers: false,
-  isExportReady: p.stage === 'Graduation'
+  isExportReady: p.stage === 'Graduation',
+  tjslStatus: p.tjslStatus || 'Belum Diperiksa',
+  tjslVerificationStatus: p.tjslVerificationStatus || 'Draft',
+  tjslClaim: p.tjslClaim || { isBinaan: 'Belum' },
+  tjslLogs: p.tjslLogs || []
 }));
 
 export default function App() {
@@ -322,6 +327,21 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => setActivePage('tjsl_verification')}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                      activePage === 'tjsl_verification' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <ShieldCheck className="h-4.5 w-4.5 shrink-0" />
+                      {sidebarOpen && <span>Status Verifikasi TJSL</span>}
+                    </div>
+                    {sidebarOpen && participant.tjslVerificationStatus === 'Perlu Klarifikasi' && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                    )}
+                  </button>
+
+                  <button
                     onClick={() => setActivePage('kelas')}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                       activePage === 'kelas' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
@@ -518,6 +538,12 @@ export default function App() {
               )}
               {activePage === 'passport' && (
                 <BusinessPassport
+                  participant={participant}
+                  onUpdateParticipant={handleUpdateParticipant}
+                />
+              )}
+              {activePage === 'tjsl_verification' && (
+                <TJSLStatusView
                   participant={participant}
                   onUpdateParticipant={handleUpdateParticipant}
                 />
