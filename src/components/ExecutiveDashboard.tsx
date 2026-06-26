@@ -9,9 +9,10 @@ import {
 interface ExecutiveDashboardProps {
   participants: Participant[];
   onUpdateParticipants: (updatedList: Participant[]) => void;
+  onNavigate?: (page: string) => void;
 }
 
-export default function ExecutiveDashboard({ participants, onUpdateParticipants }: ExecutiveDashboardProps) {
+export default function ExecutiveDashboard({ participants, onUpdateParticipants, onNavigate }: ExecutiveDashboardProps) {
   const [activeSubTab, setActiveSubTab] = useState<'analitik' | 'kurasi' | 'export' | 'tjsl_verification'>('analitik');
   
   // TJSL states
@@ -96,43 +97,57 @@ export default function ExecutiveDashboard({ participants, onUpdateParticipants 
           <p className="text-xs text-gray-500">Monitoring real-time kemajuan program TJSL Pertamina UMK Academy 2026 tingkat nasional</p>
         </div>
 
-        {/* View Switches */}
-        <div className="flex flex-wrap bg-gray-100 p-1.5 rounded-xl border gap-1">
-          <button
-            onClick={() => setActiveSubTab('analitik')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              activeSubTab === 'analitik' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Dashboard Analitik
-          </button>
-          <button
-            onClick={() => setActiveSubTab('kurasi')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              activeSubTab === 'kurasi' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Kurasi & Rekomendasi
-          </button>
-          <button
-            onClick={() => setActiveSubTab('tjsl_verification')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all relative ${
-              activeSubTab === 'tjsl_verification' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Verifikasi TJSL
-            {participants.some(p => p.tjslVerificationStatus === 'Menunggu Verifikasi') && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-white"></span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveSubTab('export')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-              activeSubTab === 'export' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            SROI & Laporan Ekspor
-          </button>
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
+          {/* Unduh Laporan Program Shortcut */}
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('reports_export')}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#0072BC] to-[#009639] hover:from-[#005c99] hover:to-[#007b2f] text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all shrink-0"
+              id="btn-shortcut-unduh-laporan"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Unduh Laporan Program</span>
+            </button>
+          )}
+
+          {/* View Switches */}
+          <div className="flex flex-wrap bg-gray-100 p-1.5 rounded-xl border gap-1">
+            <button
+              onClick={() => setActiveSubTab('analitik')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                activeSubTab === 'analitik' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Dashboard Analitik
+            </button>
+            <button
+              onClick={() => setActiveSubTab('kurasi')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                activeSubTab === 'kurasi' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Kurasi & Rekomendasi
+            </button>
+            <button
+              onClick={() => setActiveSubTab('tjsl_verification')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all relative ${
+                activeSubTab === 'tjsl_verification' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Verifikasi TJSL
+              {participants.some(p => p.tjslVerificationStatus === 'Menunggu Verifikasi') && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border border-white"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveSubTab('export')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                activeSubTab === 'export' ? 'bg-[#16365C] text-white shadow' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              SROI & Laporan Ekspor
+            </button>
+          </div>
         </div>
       </div>
 

@@ -18,12 +18,13 @@ import HelpdeskSupport from './components/HelpdeskSupport';
 import FacilitatorDashboard from './components/FacilitatorDashboard';
 import ExecutiveDashboard from './components/ExecutiveDashboard';
 import TJSLStatusView from './components/TJSLStatusView';
+import ReportsWorkspace from './components/ReportsWorkspace';
 
 // Lucide Icons
 import {
   Menu, Bell, ChevronDown, User, LogOut, LayoutDashboard, FileText, BookOpen,
   Trophy, Calendar, Users, Award, ShieldAlert, HeartHandshake, HelpCircle, Key,
-  Sparkles, CheckCircle2, ChevronRight, ShieldCheck
+  Sparkles, CheckCircle2, ChevronRight, ShieldCheck, BarChart3
 } from 'lucide-react';
 
 // Map & enrich participants so they satisfy the full type requirements (challenges list, SROI / curation flags)
@@ -462,6 +463,16 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => setActivePage('reports_export')}
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      activePage === 'reports_export' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <BarChart3 className="h-4.5 w-4.5 shrink-0" />
+                    {sidebarOpen && <span>Laporan & Export</span>}
+                  </button>
+
+                  <button
                     onClick={() => setActivePage('komunitas')}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                       activePage === 'komunitas' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
@@ -616,6 +627,14 @@ export default function App() {
                 <ExecutiveDashboard
                   participants={allParticipants}
                   onUpdateParticipants={handleUpdateAllParticipants}
+                  onNavigate={(page) => setActivePage(page)}
+                />
+              )}
+              {activePage === 'reports_export' && (
+                <ReportsWorkspace
+                  participants={allParticipants}
+                  onUpdateParticipants={handleUpdateAllParticipants}
+                  onTabChange={(tab) => setActivePage(tab)}
                 />
               )}
               {activePage === 'komunitas' && (
@@ -676,6 +695,16 @@ export default function App() {
               <span>Tantangan</span>
             </button>
           </>
+        )}
+
+        {activeRole === 'Admin' && (
+          <button
+            onClick={() => setActivePage('reports_export')}
+            className={`flex flex-col items-center space-y-1 ${activePage === 'reports_export' ? 'text-[#0072BC]' : ''}`}
+          >
+            <BarChart3 className="h-5 w-5" />
+            <span>Laporan</span>
+          </button>
         )}
 
         <button
