@@ -283,6 +283,32 @@ export default function TJSLStatusView({ participant, onUpdateParticipant }: TJS
                         <span>{claim.evidenceFile || 'Tidak dilampirkan'}</span>
                       </span>
                     </div>
+
+                    <div className="border-t pt-2.5 mt-2.5 space-y-2">
+                      <span className="text-[10px] text-[#16365C] block uppercase font-bold tracking-wider leading-relaxed">
+                        Program Pembinaan BUMN/Perusahaan Multinasional dalam 6 Bulan Terakhir
+                      </span>
+                      {claim.mengikutiProgramPembinaanLain6BulanTerakhir === true ? (
+                        <div className="grid grid-cols-2 gap-2 bg-blue-50/30 p-2 rounded-lg border border-blue-100/50">
+                          <div>
+                            <span className="text-[9px] text-gray-400 block">Nama Program</span>
+                            <span className="font-bold text-gray-800 text-[11px]">{claim.namaProgramPembinaanLain || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-gray-400 block">Penyelenggara</span>
+                            <span className="font-bold text-gray-800 text-[11px]">{claim.penyelenggaraProgramPembinaanLain || '-'}</span>
+                          </div>
+                        </div>
+                      ) : claim.mengikutiProgramPembinaanLain6BulanTerakhir === false ? (
+                        <span className="font-semibold text-gray-600 block italic text-[11px] bg-gray-100/50 px-2 py-1.5 rounded-lg border">
+                          Tidak mengikuti program pembinaan lain.
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-gray-400 block italic text-[11px]">
+                          Belum melengkapi kuisioner ini.
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

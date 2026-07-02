@@ -19,6 +19,7 @@ import FacilitatorDashboard from './components/FacilitatorDashboard';
 import ExecutiveDashboard from './components/ExecutiveDashboard';
 import TJSLStatusView from './components/TJSLStatusView';
 import ReportsWorkspace from './components/ReportsWorkspace';
+import KurasiPesertaRegional from './components/KurasiPesertaRegional';
 
 // Lucide Icons
 import {
@@ -163,7 +164,23 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <LoginOnboarding
-        onLoginSuccess={() => setIsLoggedIn(true)}
+        onLoginSuccess={(newTjslClaim?: any) => {
+          setIsLoggedIn(true);
+          if (newTjslClaim) {
+            const updatedParticipant = {
+              ...participant,
+              tjslClaim: {
+                ...participant.tjslClaim,
+                ...newTjslClaim,
+                mengikutiProgramPembinaanLain6BulanTerakhir: newTjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir,
+                namaProgramPembinaanLain: newTjslClaim.namaProgramPembinaanLain,
+                penyelenggaraProgramPembinaanLain: newTjslClaim.penyelenggaraProgramPembinaanLain,
+              }
+            };
+            setParticipant(updatedParticipant);
+            setAllParticipants(allParticipants.map(p => p.id === participant.id ? updatedParticipant : p));
+          }
+        }}
       />
     );
   }
@@ -463,6 +480,16 @@ export default function App() {
                   </button>
 
                   <button
+                    onClick={() => setActivePage('kurasi_regional')}
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      activePage === 'kurasi_regional' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Trophy className="h-4.5 w-4.5 shrink-0 text-[#A8C61F]" />
+                    {sidebarOpen && <span className="font-bold text-[#A8C61F]">Kurasi Peserta Regional</span>}
+                  </button>
+
+                  <button
                     onClick={() => setActivePage('reports_export')}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                       activePage === 'reports_export' ? 'bg-[#0072BC] text-white font-bold shadow-sm' : 'hover:bg-white/5 hover:text-white'
@@ -628,6 +655,12 @@ export default function App() {
                   participants={allParticipants}
                   onUpdateParticipants={handleUpdateAllParticipants}
                   onNavigate={(page) => setActivePage(page)}
+                />
+              )}
+              {activePage === 'kurasi_regional' && (
+                <KurasiPesertaRegional
+                  participants={allParticipants}
+                  onUpdateParticipants={handleUpdateAllParticipants}
                 />
               )}
               {activePage === 'reports_export' && (

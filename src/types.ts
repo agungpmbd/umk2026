@@ -25,11 +25,11 @@ export interface FinancialData {
   employeesCurrent: number;
   digitalChannelsBaseline: number;
   digitalChannelsCurrent: number;
-  loanSource: string;
-  loanAmount: number;
-  hasBankAccount: boolean;
-  useQRIS: boolean;
-  usePOS: boolean;
+  loanSource?: string;
+  loanAmount?: number;
+  hasBankAccount?: boolean;
+  useQRIS?: boolean;
+  usePOS?: boolean;
 }
 
 export interface SustainabilityPractice {
@@ -146,8 +146,8 @@ export interface Participant {
   sector: string;
   region: string;
   stage: 'Pendaftaran' | 'Verifikasi Status Binaan TJSL' | 'Pembinaan Regional' | 'Kurasi Nasional' | 'Pembinaan Nasional' | 'Top 100 Champion' | 'Graduation' | 'Nasional' | string;
-  status: 'Aktif' | 'Pasif' | 'Selesai';
-  riskStatus: 'Aman' | 'Perlu Perhatian' | 'Berisiko' | 'Tidak Aktif';
+  status: 'Aktif' | 'Pasif' | 'Selesai' | string;
+  riskStatus: 'Aman' | 'Perlu Perhatian' | 'Berisiko' | 'Tidak Aktif' | string;
   lastLogin: string;
   challengePoints: number;
   learningProgress: number;
@@ -162,10 +162,13 @@ export interface Participant {
   isRecommendedAggregator?: boolean;
   isUMKMTroopers?: boolean;
   isExportReady?: boolean;
-  tjslStatus?: 'Binaan Terverifikasi' | 'Perlu Klarifikasi' | 'Perlu Persetujuan SMEPP' | 'Tidak Eligible' | 'Belum Diperiksa';
-  tjslVerificationStatus?: 'Terverifikasi' | 'Menunggu Klarifikasi' | 'Menunggu Persetujuan' | 'Tidak Terverifikasi' | 'Draft' | 'Perlu Klarifikasi' | 'Menunggu Verifikasi' | 'Tidak Eligible';
+  tjslStatus?: 'Binaan Terverifikasi' | 'Perlu Klarifikasi' | 'Perlu Persetujuan SMEPP' | 'Tidak Eligible' | 'Belum Diperiksa' | string;
+  tjslVerificationStatus?: 'Terverifikasi' | 'Menunggu Klarifikasi' | 'Menunggu Persetujuan' | 'Tidak Terverifikasi' | 'Draft' | 'Perlu Klarifikasi' | 'Menunggu Verifikasi' | 'Tidak Eligible' | string;
   tjslClaim?: TJSLClaim;
   tjslLogs?: TJSLAuditLog[];
+  mengikutiProgramPembinaanLain6BulanTerakhir?: boolean;
+  namaProgramPembinaanLain?: string | null;
+  penyelenggaraProgramPembinaanLain?: string | null;
 }
 
 export interface TJSLClaim {
@@ -183,7 +186,10 @@ export interface TJSLClaim {
   notes?: string;
   consent?: boolean;
   dbMatchDetails?: string;
-  dbMatchStatus?: 'Match' | 'Partial' | 'No History' | 'Inconsistent';
+  dbMatchStatus?: 'Match' | 'Partial' | 'No History' | 'Inconsistent' | 'No_Match' | 'Duplicate' | 'Clarify_Needed';
+  mengikutiProgramPembinaanLain6BulanTerakhir?: boolean;
+  namaProgramPembinaanLain?: string | null;
+  penyelenggaraProgramPembinaanLain?: string | null;
 }
 
 export interface TJSLAuditLog {

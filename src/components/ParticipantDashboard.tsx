@@ -3,7 +3,8 @@ import { Participant, LearningModule, Challenge, AgendaEvent } from '../types';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import {
   Sparkles, Award, BookOpen, Clock, Calendar, CheckCircle2, TrendingUp,
-  ChevronRight, Users, MessageSquare, ShieldAlert, ArrowUpRight, ShieldCheck
+  ChevronRight, Users, MessageSquare, ShieldAlert, ArrowUpRight, ShieldCheck,
+  PlayCircle, AlertCircle, CheckSquare
 } from 'lucide-react';
 
 interface ParticipantDashboardProps {
@@ -90,6 +91,335 @@ export default function ParticipantDashboard({
     }
     return 1; // Default to Pembinaan Regional
   };
+
+  const activeIdx = getActiveStageIndex(participant.stage);
+
+  // Default selected stage is the participant's current stage
+  const [selectedStageId, setSelectedStageId] = React.useState<string>(
+    journeyStages[activeIdx]?.id || 'pembinaan_regional'
+  );
+
+  // Formatting utility
+  const formatRupiah = (num: number) => {
+    return 'Rp' + num.toLocaleString('id-ID');
+  };
+
+  // Next upcoming event for Siti
+  const nextEvent = agendaEvents.find(e => e.attendanceStatus === 'Menunggu') || agendaEvents[2];
+
+  // Uncompleted important tasks
+  const pendingChallenges = challenges.filter(c => c.status === 'Draft' || c.status === 'Perlu Revisi');
+
+  const [showDetailProses, setShowDetailProses] = React.useState(false);
+  const [onboardingStatus, setOnboardingStatus] = React.useState<'Belum Konfirmasi' | 'Sudah Konfirmasi' | 'Mengundurkan Diri'>('Belum Konfirmasi');
+  const [hasSignedCommitment, setHasSignedCommitment] = React.useState(false);
+
+  // Participant registration sub-statuses for Detail Proses
+  const processSteps = [
+    { name: 'Pendaftaran', desc: 'Pengisian data identitas, profil bisnis, dan legalitas awal.', status: 'Selesai', date: '2026-06-20' },
+    { name: 'Validasi Sistem', desc: 'Pengecekan otomatis kelengkapan formulir dan format berkas.', status: 'Selesai', date: '2026-06-21' },
+    { name: 'Eligibility Gate', desc: 'Pemeriksaan kepemilikan NIB aktif dan duplikasi NIK pendaftar.', status: 'Eligible', date: '2026-06-22' },
+    { name: 'Verifikasi TJSL', desc: 'Sinkronisasi data keabsahan program afiliasi Satu Data SMEPP.', status: 'Terverifikasi', date: '2026-06-23' },
+    { name: 'Verifikasi Dokumen', desc: 'Pemeriksaan berkas manual oleh tim kurator pusat.', status: 'Selesai', date: '2026-06-24' },
+    { name: 'Kurasi', desc: 'Penilaian bobot scorecard otomatis & peringkat kelayakan regional.', status: 'Selesai', date: '2026-06-25' },
+    { name: 'Pengumuman', desc: 'Keputusan final kelulusan regional oleh komite SMEPP/PTC.', status: 'Lolos Pembinaan Regional', date: '2026-06-28' },
+    { name: 'Onboarding Regional', desc: 'Konfirmasi kehadiran, penandatanganan komitmen, dan penentuan fasilitator.', status: onboardingStatus === 'Sudah Konfirmasi' ? 'Selesai' : 'Menunggu Konfirmasi', date: 'Hari Ini' }
+  ];
+
+  return (
+    <div id="participant-dashboard" className="space-y-6 pb-20 md:pb-10 font-sans text-[#16365C]">
+      {/* A. WELCOME HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-1">
+        <div>
+          <div className="flex items-center space-x-2 bg-[#0072BC]/10 px-3 py-1 rounded-full text-[11px] font-bold text-[#0072BC] w-max mb-2">
+            <Sparkles className="h-3.5 w-3.5 text-[#A8C61F]" />
+            <span>Regional Jawa Tengah • {participant.sector}</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#16365C]">Selamat datang kembali, Ibu {participant.name}!</h2>
+          <p className="text-gray-500 text-xs md:text-sm mt-1">
+            Pantau status pendaftaran dan rangkaian persiapan pembinaan <strong className="text-[#0072BC]">"{participant.businessName}"</strong> Anda di bawah ini.
+          </p>
+        </div>
+      </div>
+
+      {/* B. MAIN CARD: STATUS PENDAFTARAN & VERIFIKASI */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+        {/* Card Header */}
+        <div className="p-6 bg-gradient-to-r from-[#16365C] to-[#0072BC] text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A8C61F] block">Sistem Terintegrasi Satu Data SMEPP</span>
+            <h3 className="text-lg font-black mt-1">Status Pendaftaran & Verifikasi</h3>
+          </div>
+          <span className="px-3.5 py-1.5 bg-[#A8C61F] text-white text-xs font-black rounded-full shadow-md animate-pulse">
+            Lolos Pembinaan Regional
+          </span>
+        </div>
+
+        {/* Card Body */}
+        <div className="p-6 md:p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center md:text-left">
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">Status Kelulusan</span>
+              <span className="text-xs font-extrabold text-[#0072BC] block mt-1.5">Lolos Regional</span>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">Kelengkapan Data</span>
+              <span className="text-xs font-extrabold text-green-600 block mt-1.5">✓ 100% Lengkap</span>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">Status Kelayakan</span>
+              <span className="text-xs font-extrabold text-green-600 block mt-1.5">✓ Eligible (NIB Aktif)</span>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">Verifikasi TJSL</span>
+              <span className="text-xs font-extrabold text-green-600 block mt-1.5">✓ Terverifikasi (PFpreneur)</span>
+            </div>
+          </div>
+
+          {/* Clarification Box (Graceful empty state/no clarification needed) */}
+          <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex items-start gap-3">
+            <ShieldCheck className="h-5 w-5 text-[#0072BC] shrink-0 mt-0.5 animate-bounce" />
+            <div className="text-xs text-gray-600 leading-relaxed">
+              <strong className="text-[#16365C] block mb-0.5">Semua Berkas Terverifikasi Sah!</strong>
+              Tidak ada permintaan klarifikasi aktif dari kurator pusat. Data omzet awal, legalitas NIB, dan riwayat program TJSL Anda telah cocok dengan sistem database nasional Satu Data SMEPP.
+            </div>
+          </div>
+
+          {/* Announcement Text Box */}
+          <div className="p-5 bg-green-50 border border-green-100 rounded-2xl space-y-2">
+            <h4 className="text-sm font-black text-green-800 flex items-center gap-1.5">
+              <Award className="h-5 w-5 text-[#A8C61F]" />
+              <span>Pengumuman Hasil Seleksi Regional:</span>
+            </h4>
+            <p className="text-xs text-green-700 leading-relaxed font-medium">
+              Selamat! Berdasarkan hasil scoring otomatis berkas administrasi, legalitas usaha, rekam jejak program pembinaan terdahulu, dan komitmen tinggi Anda, brand <strong>"Rasa Nusantara"</strong> dinyatakan <strong>LOLOS UTAMA</strong> untuk mengikuti rangkaian <strong>Pembinaan UMK Academy 2026 Regional Jawa Tengah</strong>.
+            </p>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <button
+              onClick={() => setShowDetailProses(!showDetailProses)}
+              className="px-5 py-3 bg-[#16365C] hover:bg-[#16365C]/95 text-white font-bold rounded-xl text-xs transition flex justify-center items-center gap-1.5"
+            >
+              <span>{showDetailProses ? 'Sembunyikan Detail Proses' : 'Lihat Detail Sub-Status Proses'}</span>
+              <ChevronRight className={`h-4 w-4 transition-transform ${showDetailProses ? 'rotate-90' : ''}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* C. COLLAPSIBLE PROCESS DETAILED TIMELINE */}
+      {showDetailProses && (
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <h4 className="font-extrabold text-sm border-b pb-2 text-[#16365C]">Detail Langkah Operasional Seleksi Regional Anda:</h4>
+          <div className="relative border-l border-gray-200 pl-6 space-y-6 py-2">
+            {processSteps.map((step, idx) => (
+              <div key={idx} className="relative">
+                {/* Dot */}
+                <div className="absolute -left-[31px] top-1 h-5 w-5 rounded-full bg-white border-2 border-[#0072BC] flex items-center justify-center">
+                  <div className="h-2 w-2 rounded-full bg-[#0072BC]" />
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+                  <div>
+                    <h5 className="text-xs font-black text-[#16365C]">{idx + 1}. {step.name}</h5>
+                    <p className="text-[11px] text-gray-500 mt-0.5">{step.desc}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block text-[9px] font-extrabold bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full">
+                      {step.status}
+                    </span>
+                    <span className="block text-[9px] text-gray-400 mt-0.5">{step.date}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* D. INTERACTIVE REGIONAL ONBOARDING STEPS (Section 17) */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg space-y-6">
+        <h3 className="text-base font-extrabold border-b pb-3 flex items-center gap-2 text-[#16365C]">
+          <PlayCircle className="h-5 w-5 text-[#0072BC]" />
+          <span>Langkah Onboarding Pembinaan Regional (Wajib Diisi)</span>
+        </h3>
+
+        {onboardingStatus === 'Belum Konfirmasi' ? (
+          <div className="space-y-6">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Mohon selesaikan lembar konfirmasi kehadiran dan penandatanganan komitmen belajar di bawah ini untuk mengaktifkan akun LMS regional Anda.
+            </p>
+
+            <div className="p-4 bg-gray-50 rounded-xl space-y-4 border border-gray-100">
+              <span className="text-xs font-bold text-[#16365C] block">1. Surat Pernyataan Re-Komitmen & Integritas Belajar</span>
+              <div className="text-[11px] text-gray-600 bg-white p-3.5 rounded-lg border border-gray-100 max-h-40 overflow-y-auto leading-relaxed space-y-2">
+                <p className="font-bold">Sebagai peserta terpilih UMK Academy 2026 Regional Jawa Tengah, saya menyatakan:</p>
+                <p>• Bersedia mengikuti seluruh rangkaian kelas online, webinar, coaching tatap muka, dan pameran wajib.</p>
+                <p>• Berkomitmen memperbarui data omzet serta profil bisnis di Business Passport secara jujur setiap bulan.</p>
+                <p>• Menyelesaikan minimal 80% tugas (Challenges) yang diberikan oleh fasilitator.</p>
+                <p>• Menyetujui konsekuensi non-aktif (pemberhentian hak kepesertaan) apabila tidak hadir 3 kali berturut-turut tanpa alasan medis/darurat.</p>
+              </div>
+
+              <label className="flex items-start gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasSignedCommitment}
+                  onChange={(e) => setHasSignedCommitment(e.target.checked)}
+                  className="mt-0.5 rounded text-[#0072BC] focus:ring-[#0072BC]"
+                />
+                <span className="text-xs text-gray-700 leading-normal">
+                  Saya menyatakan setuju, bersedia, dan berjanji akan mematuhi seluruh komitmen di atas dengan penuh tanggung jawab.
+                </span>
+              </label>
+            </div>
+
+            {/* Sektor & Region Confirm */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-xl border">
+                <span className="text-[10px] text-gray-400 font-bold block uppercase">Sektor Usaha Terkonfirmasi</span>
+                <strong className="text-xs block mt-1 text-[#16365C]">{participant.sector}</strong>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl border">
+                <span className="text-[10px] text-gray-400 font-bold block uppercase">Wilayah Penugasan Regional</span>
+                <strong className="text-xs block mt-1 text-[#16365C]">Regional {participant.region || 'Jawa Tengah'}</strong>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  if (confirm('Apakah Anda yakin ingin mengundurkan diri? Posisi Anda akan digantikan oleh peserta cadangan regional.')) {
+                    setOnboardingStatus('Mengundurkan Diri');
+                  }
+                }}
+                className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition"
+              >
+                Mengundurkan Diri
+              </button>
+              <button
+                onClick={() => {
+                  if (!hasSignedCommitment) {
+                    alert('Mohon centang persetujuan lembar komitmen belajar terlebih dahulu!');
+                    return;
+                  }
+                  setOnboardingStatus('Sudah Konfirmasi');
+                  alert('Selamat! Konfirmasi kehadiran Anda berhasil disimpan. Grup belajar, modul, dan alokasi fasilitator sekarang aktif.');
+                }}
+                className="px-5 py-2.5 bg-[#A8C61F] hover:bg-[#A8C61F]/90 text-white rounded-xl text-xs font-extrabold shadow-md transition"
+              >
+                Konfirmasi Kehadiran & Aktifkan LMS
+              </button>
+            </div>
+          </div>
+        ) : onboardingStatus === 'Mengundurkan Diri' ? (
+          <div className="p-5 bg-red-50 border border-red-100 rounded-2xl space-y-2 text-center py-8">
+            <AlertCircle className="h-10 w-10 text-red-500 mx-auto animate-pulse" />
+            <h4 className="text-sm font-black text-red-800">Status Anda: Mengundurkan Diri</h4>
+            <p className="text-xs text-red-700 max-w-md mx-auto">
+              Anda telah menyatakan mengundurkan diri dari program Pertamina UMK Academy 2026. Posisi Anda otomatis dialokasikan kepada peserta cadangan di peringkat regional teratas berikutnya. Terima kasih atas partisipasi Anda.
+            </p>
+          </div>
+        ) : (
+          /* ONBOARDING SUCCESS ACTIVE REGIONAL VIEW */
+          <div className="space-y-6">
+            <div className="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3">
+              <CheckSquare className="h-5 w-5 text-[#A8C61F]" />
+              <div className="text-xs text-green-800 font-bold">
+                ✓ Onboarding Selesai! Selamat berjuang di kelas Regional Jawa Tengah.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* WhatsApp group */}
+              <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase block">Langkah 1: Komunikasi</span>
+                  <strong className="text-xs text-[#16365C] block mt-1">Gabung WhatsApp Group</strong>
+                  <p className="text-[11px] text-gray-400 mt-1">Grup koordinasi resmi bersama fasilitator dan rekan se-region Jateng.</p>
+                </div>
+                <button
+                  onClick={() => alert('Membuka undangan grup belajar WhatsApp: "Pertamina UMK Academy Jateng 2026"')}
+                  className="w-full mt-2 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold text-center flex justify-center items-center gap-1.5 transition"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Join WA Group Regional</span>
+                </button>
+              </div>
+
+              {/* Kick Off */}
+              <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase block">Langkah 2: Kick-Off</span>
+                  <strong className="text-xs text-[#16365C] block mt-1">Jadwal Kick-Off Regional</strong>
+                  <p className="text-[11px] text-gray-400 mt-1">Sesi pengenalan kelas dan silabus lengkap bersama komite BUMN.</p>
+                  <span className="inline-block mt-2 text-[10px] bg-blue-50 text-blue-700 font-extrabold px-2 py-0.5 rounded">
+                    Kamis, 2 Juli 2026 • 09:00 WIB
+                  </span>
+                </div>
+                <button
+                  onClick={() => alert('Membuka tautan webinar Kick-Off Regional (Zoom Link)')}
+                  className="w-full mt-2 py-2 bg-[#0072BC] hover:bg-[#0072BC]/90 text-white rounded-xl text-xs font-bold text-center block transition"
+                >
+                  Masuk Tautan Webinar
+                </button>
+              </div>
+
+              {/* Facilitator Allocation */}
+              <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase block">Langkah 3: Pendampingan</span>
+                  <strong className="text-xs text-[#16365C] block mt-1">Fasilitator Kelas Anda</strong>
+                  <div className="flex items-center gap-2.5 mt-2">
+                    <img
+                      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80"
+                      alt="Facilitator Andi"
+                      className="w-8 h-8 rounded-full object-cover border"
+                    />
+                    <div>
+                      <strong className="text-xs text-gray-700 block leading-none">Andi Pratama</strong>
+                      <span className="text-[9px] text-gray-400 block mt-1">Fasilitator Utama Jateng</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => alert('Menghubungi Fasilitator Andi Pratama via chat helpdesk')}
+                  className="w-full mt-2 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold text-center block transition"
+                >
+                  Chat Fasilitator
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Access to Class Center */}
+            <div className="p-5 bg-[#A8C61F]/10 border border-[#A8C61F]/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <strong className="text-sm block text-[#16365C]">LMS Pembinaan Regional Jawa Tengah Aktif</strong>
+                <p className="text-xs text-gray-500 mt-1">Akses kurikulum modul kelas, rekam jejak presensi, dan submit challenge bisnis Anda sekarang.</p>
+              </div>
+              <button
+                onClick={() => onTabChange('kelas')}
+                className="px-5 py-2.5 bg-[#A8C61F] hover:bg-[#A8C61F]/90 text-white font-extrabold rounded-xl text-xs shadow-md transition shrink-0"
+              >
+                Mulai Belajar Sekarang
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+};
+
+// Leave the rest of the original unused component below, but we exited early above.
+const unusedCodePlaceholderForVite = () => {
+  const getActiveStageIndex = (s: string) => 1;
+  const participant = { stage: '', sector: '', businessName: '', passport: { financials: { revenueBaseline: 0, revenueCurrent: 0, employeesBaseline: 0, employeesCurrent: 0 } } } as any;
+  const journeyStages = [] as any[];
+  const agendaEvents = [] as any[];
+  const challenges = [] as any[];
+  const onTabChange = (t: string) => {};
 
   const activeIdx = getActiveStageIndex(participant.stage);
 

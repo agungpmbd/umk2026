@@ -57,7 +57,10 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
     statusProgram: 'Aktif',
     evidenceFile: '',
     notes: '',
-    consentTJSL: false
+    consentTJSL: false,
+    mengikutiProgramPembinaanLain6BulanTerakhir: undefined as boolean | undefined,
+    namaProgramPembinaanLain: '',
+    penyelenggaraProgramPembinaanLain: ''
   });
 
   const [commitmentChecked, setCommitmentChecked] = useState(false);
@@ -110,23 +113,36 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
       setValidationError('');
       setOnboardingStep(4);
     } else if (onboardingStep === 4) {
+      if (tjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir === undefined) {
+        setValidationError('Silakan jawab pertanyaan wajib mengenai riwayat program pembinaan lain.');
+        return;
+      }
+      if (tjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir === true) {
+        if (!tjslClaim.namaProgramPembinaanLain?.trim() || !tjslClaim.penyelenggaraProgramPembinaanLain?.trim()) {
+          setValidationError('Semua kolom berlogo bintang wajib diisi.');
+          return;
+        }
+      }
       setValidationError('');
       setOnboardingStep(5);
     } else if (onboardingStep === 5) {
+      setValidationError('');
+      setOnboardingStep(6);
+    } else if (onboardingStep === 6) {
       if (!initialConditions.revenue || !initialConditions.employees) {
         setValidationError('Silakan isi data kondisi awal usaha.');
         return;
       }
       setValidationError('');
-      setOnboardingStep(6);
-    } else if (onboardingStep === 6) {
+      setOnboardingStep(7);
+    } else if (onboardingStep === 7) {
       if (!commitmentChecked) {
         setValidationError('Anda harus menyetujui lembar komitmen program.');
         return;
       }
       setValidationError('');
       // Onboarding complete, enter dashboard
-      onLoginSuccess();
+      onLoginSuccess(tjslClaim);
     }
   };
 
@@ -139,6 +155,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
     { label: 'Profil Pemilik', icon: User },
     { label: 'Profil Usaha', icon: Briefcase },
     { label: 'Afiliasi & TJSL', icon: Sparkles },
+    { label: 'Pembinaan Lain', icon: HelpCircle },
     { label: 'Legalitas', icon: FileText },
     { label: 'Kondisi Awal', icon: BarChart3 },
     { label: 'Komitmen', icon: CheckSquare },
@@ -318,7 +335,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h2 className="text-lg font-bold">Aktivasi Profil & Onboarding</h2>
-                    <p className="text-xs text-white/70">Langkah {onboardingStep} dari 6: Lengkapi profil baseline Anda</p>
+                    <p className="text-xs text-white/70">Langkah {onboardingStep} dari {stepIcons.length}: Lengkapi profil baseline Anda</p>
                   </div>
                   <button
                     onClick={() => setIsOnboarding(false)}
@@ -685,8 +702,91 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                   </div>
                 )}
 
-                {/* STEP 4: LEGALITAS */}
+                {/* STEP 4: RIWAYAT PROGRAM PEMBINAAN LAIN */}
                 {onboardingStep === 4 && (
+                  <div className="space-y-4 font-sans text-xs">
+                    <h3 className="text-base font-bold text-[#16365C] pb-2 border-b flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-[#A8C61F]" />
+                      <span>Riwayat Program Pembinaan Lain</span>
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5 leading-normal">
+                          Dalam 6 bulan terakhir, apakah Anda sedang atau pernah mengikuti program pembinaan UMKM yang diselenggarakan oleh BUMN lain atau perusahaan multinasional? *
+                        </label>
+                        <div className="flex gap-6 mt-3">
+                          <label className="flex items-center space-x-2 cursor-pointer select-none">
+                            <input
+                              type="radio"
+                              name="mengikutiPembinaanLain"
+                              checked={tjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir === true}
+                              onChange={() => setTjslClaim({ 
+                                ...tjslClaim, 
+                                mengikutiProgramPembinaanLain6BulanTerakhir: true 
+                              })}
+                              className="h-4 w-4 text-[#0072BC] focus:ring-[#0072BC]"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Ya</span>
+                          </label>
+                          <label className="flex items-center space-x-2 cursor-pointer select-none">
+                            <input
+                              type="radio"
+                              name="mengikutiPembinaanLain"
+                              checked={tjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir === false}
+                              onChange={() => setTjslClaim({ 
+                                ...tjslClaim, 
+                                mengikutiProgramPembinaanLain6BulanTerakhir: false,
+                                namaProgramPembinaanLain: '',
+                                penyelenggaraProgramPembinaanLain: ''
+                              })}
+                              className="h-4 w-4 text-[#0072BC] focus:ring-[#0072BC]"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Tidak</span>
+                          </label>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
+                          Informasi ini digunakan untuk memastikan kesesuaian peserta dengan ketentuan program dan menghindari tumpang tindih pembinaan.
+                        </p>
+                      </div>
+
+                      {tjslClaim.mengikutiProgramPembinaanLain6BulanTerakhir === true && (
+                        <div className="p-4 bg-blue-50/40 border border-blue-100 rounded-xl space-y-4">
+                          <span className="font-bold text-[#16365C] block text-xs border-b pb-1">
+                            Lengkapi Detail Program Pembinaan Lain:
+                          </span>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Nama Program Pembinaan *</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.namaProgramPembinaanLain || ''}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, namaProgramPembinaanLain: e.target.value })}
+                                placeholder="Contoh: Program UMKM Naik Kelas"
+                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 focus:ring-2 focus:ring-[#0072BC] focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-bold text-gray-700 mb-1">Nama Penyelenggara *</label>
+                              <input
+                                type="text"
+                                value={tjslClaim.penyelenggaraProgramPembinaanLain || ''}
+                                onChange={(e) => setTjslClaim({ ...tjslClaim, penyelenggaraProgramPembinaanLain: e.target.value })}
+                                placeholder="Contoh: PT BUMN ABC atau PT Multinasional XYZ"
+                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 focus:ring-2 focus:ring-[#0072BC] focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 5: LEGALITAS */}
+                {onboardingStep === 5 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Legalitas & Sertifikasi (Opsional - Bisa Diisi Nanti)</h3>
                     <p className="text-xs text-gray-500 mb-4">
@@ -696,36 +796,36 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Nomor Induk Berusaha (NIB)</label>
                         <input
-                          type="text"
-                          value={legalDocuments.nib}
-                          onChange={(e) => setLegalDocuments({ ...legalDocuments, nib: e.target.value })}
-                          className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 font-mono"
-                          placeholder="91200xxxxxx"
+                           type="text"
+                           value={legalDocuments.nib}
+                           onChange={(e) => setLegalDocuments({ ...legalDocuments, nib: e.target.value })}
+                           className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 font-mono"
+                           placeholder="91200xxxxxx"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Nomor P-IRT (Dinkes)</label>
                         <input
-                          type="text"
-                          value={legalDocuments.pirt}
-                          onChange={(e) => setLegalDocuments({ ...legalDocuments, pirt: e.target.value })}
-                          className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 font-mono"
-                          placeholder="P-IRT xxxxxxxxxxxxxxx"
+                           type="text"
+                           value={legalDocuments.pirt}
+                           onChange={(e) => setLegalDocuments({ ...legalDocuments, pirt: e.target.value })}
+                           className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 font-mono"
+                           placeholder="P-IRT xxxxxxxxxxxxxxx"
                         />
                       </div>
                       <div className="p-4 bg-[#A8C61F]/10 rounded-xl border border-[#A8C61F]/30 flex items-start space-x-3">
                         <ShieldCheck className="h-5 w-5 text-[#0072BC] shrink-0 mt-0.5" />
                         <div className="text-xs text-[#16365C]">
                           <span className="font-bold block mb-1">Belum Memiliki Dokumen di Atas?</span>
-                          Jangan khawatir! Selama mengikuti UMK Academy, fasilitator kami akan mendampingi pengurusan NIB, Halal Self Declare, dan P-IRT secara terpadu.
+                           Jangan khawatir! Selama mengikuti UMK Academy, fasilitator kami akan mendampingi pengurusan NIB, Halal Self Declare, dan P-IRT secara terpadu.
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* STEP 5: KONDISI AWAL (BASELINE IMPACT MEASUREMENT) */}
-                {onboardingStep === 5 && (
+                {/* STEP 6: KONDISI AWAL (BASELINE IMPACT MEASUREMENT) */}
+                {onboardingStep === 6 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Kondisi Awal Usaha (Baseline SROI)</h3>
                     <p className="text-xs text-gray-500 mb-4">
@@ -764,8 +864,8 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                   </div>
                 )}
 
-                {/* STEP 6: KOMITMEN */}
-                {onboardingStep === 6 && (
+                {/* STEP 7: KOMITMEN */}
+                {onboardingStep === 7 && (
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-[#16365C] pb-2 border-b">Pernyataan Komitmen & Integritas</h3>
                     <div className="p-4 bg-gray-50 border rounded-xl text-xs space-y-3 max-h-60 overflow-y-auto leading-relaxed text-gray-600">
@@ -810,7 +910,7 @@ export default function LoginOnboarding({ onLoginSuccess }: LoginOnboardingProps
                     onClick={handleNextStep}
                     className="bg-[#0072BC] hover:bg-[#0072BC]/90 text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow transition-all flex items-center space-x-1.5"
                   >
-                    <span>{onboardingStep === 6 ? 'Selesaikan & Masuk' : 'Lanjut'}</span>
+                    <span>{onboardingStep === 7 ? 'Selesaikan & Masuk' : 'Lanjut'}</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>

@@ -506,6 +506,32 @@ export default function FacilitatorDashboard({ participants, onUpdateParticipant
                               <span>{claim?.evidenceFile || 'Tidak ada'}</span>
                             </span>
                           </div>
+
+                          <div className="border-t pt-2 mt-2 space-y-1">
+                            <span className="text-[8px] text-[#16365C] block uppercase font-bold tracking-wider leading-relaxed">
+                              Program Pembinaan Lain (6 Bln Terakhir)
+                            </span>
+                            {claim?.mengikutiProgramPembinaanLain6BulanTerakhir === true ? (
+                              <div className="bg-blue-50/40 p-1.5 rounded border border-blue-100 space-y-1">
+                                <div>
+                                  <span className="text-[7px] text-gray-400 block font-semibold">Nama Program</span>
+                                  <span className="font-bold text-gray-800 text-[10px]">{claim?.namaProgramPembinaanLain || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="text-[7px] text-gray-400 block font-semibold">Penyelenggara</span>
+                                  <span className="font-bold text-gray-800 text-[10px]">{claim?.penyelenggaraProgramPembinaanLain || '-'}</span>
+                                </div>
+                              </div>
+                            ) : claim?.mengikutiProgramPembinaanLain6BulanTerakhir === false ? (
+                              <span className="font-semibold text-gray-500 block italic text-[10px]">
+                                Tidak mengikuti program pembinaan lain.
+                              </span>
+                            ) : (
+                              <span className="font-semibold text-gray-400 block italic text-[10px]">
+                                Belum mengisi kuisioner pembinaan lain.
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Database record */}
